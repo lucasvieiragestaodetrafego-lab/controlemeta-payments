@@ -31,7 +31,7 @@ export default function ManagerSelect({
       defaultValue={currentManagerId ?? ""}
       onChange={handleChange}
       disabled={isPending}
-      className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-slate-100 disabled:opacity-50"
+      className="min-w-[140px] rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-slate-100 disabled:opacity-50"
     >
       {managers.map((m) => (
         <option key={m.id} value={m.id}>
