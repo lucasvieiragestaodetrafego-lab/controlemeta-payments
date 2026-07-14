@@ -13,7 +13,7 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-  { href: "/", label: "Alertas", icon: "🔔" },
+  { href: "/", label: "Relatórios", icon: "🔔" },
   { href: "/templates", label: "Templates", icon: "💬", adminOnly: true },
   { href: "/settings", label: "Configurações", icon: "⚙️", adminOnly: true },
   { href: "/usuarios", label: "Usuários", icon: "👥", adminOnly: true },
