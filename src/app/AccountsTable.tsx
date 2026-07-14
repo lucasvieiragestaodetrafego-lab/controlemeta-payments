@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition, type ReactNode } from "react";
 import type { SituacaoTone } from "@/lib/account-status";
 import ManagerSelect from "@/app/ManagerSelect";
 import AutomationToggle from "@/app/AutomationToggle";
@@ -10,10 +10,12 @@ import EditAccountModal from "@/app/EditAccountModal";
 import { deleteAccounts } from "@/app/actions";
 import Sparkline from "@/app/Sparkline";
 import RiskChart from "@/app/RiskChart";
+import { groupAccountsByClient } from "@/lib/group-accounts";
 
 export interface AccountRow {
   id: string;
   name: string;
+  clientName: string;
   isPrepay: boolean | null;
   currency: string;
   balance: number | null;
@@ -45,6 +47,31 @@ const TONE_CLASSES: Record<SituacaoTone, string> = {
 
 const selectClass =
   "rounded border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100";
+
+/** Renderiza a linha de cabeçalho do cliente seguida das linhas passadas como children. */
+function FragmentGroup({
+  clientName,
+  colSpan,
+  children,
+}: {
+  clientName: string;
+  colSpan: number;
+  children: ReactNode;
+}) {
+  return (
+    <>
+      <tr className="bg-slate-950/60">
+        <td
+          colSpan={colSpan}
+          className="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500"
+        >
+          {clientName}
+        </td>
+      </tr>
+      {children}
+    </>
+  );
+}
 
 export default function AccountsTable({
   rows,
@@ -97,6 +124,8 @@ export default function AccountsTable({
       return true;
     });
   }, [rows, search, situacao, tipo, gestor, automacao]);
+
+  const groups = useMemo(() => groupAccountsByClient(filtered), [filtered]);
 
   function toggleOne(id: string) {
     setSelected((prev) => {
@@ -155,39 +184,51 @@ export default function AccountsTable({
   }
 
   const cardsView = (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {filtered.map((row) => {
-        const balanceLabel =
-          row.balance === null
-            ? "—"
-            : row.balance.toLocaleString("pt-BR", { style: "currency", currency: row.currency });
-        return (
-          <div key={row.id} className="rounded-lg border border-slate-800 bg-slate-900 p-4">
-            <div className="mb-2 flex items-start justify-between">
-              <PlatformBadge platform={row.platform} />
-              {isAdmin && (
-                <button
-                  type="button"
-                  onClick={() => setEditing(row)}
-                  className="text-xs text-sky-400 hover:text-sky-300"
-                >
-                  Editar
-                </button>
-              )}
-            </div>
-            <p className="text-lg font-semibold text-slate-100">{balanceLabel}</p>
-            <p className="text-xs text-slate-400">{row.name}</p>
-            <div className="my-2">
-              <Sparkline values={row.sparkValues} tone={sparkTone(row.sparkValues)} width={200} height={28} />
-            </div>
-            <span className={`inline-block rounded px-2 py-0.5 text-xs ${TONE_CLASSES[row.situacaoTone]}`}>
-              {row.situacaoLabel}
-            </span>
+    <div className="space-y-5">
+      {groups.map((group) => (
+        <div key={group.clientName}>
+          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            {group.clientName}
+          </h3>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {group.rows.map((row) => {
+              const balanceLabel =
+                row.balance === null
+                  ? "—"
+                  : row.balance.toLocaleString("pt-BR", { style: "currency", currency: row.currency });
+              return (
+                <div key={row.id} className="rounded-lg border border-slate-800 bg-slate-900 p-4">
+                  <div className="mb-2 flex items-start justify-between">
+                    <PlatformBadge platform={row.platform} />
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        onClick={() => setEditing(row)}
+                        className="text-xs text-sky-400 hover:text-sky-300"
+                      >
+                        Editar
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-lg font-semibold text-slate-100">{balanceLabel}</p>
+                  <p className="text-xs text-slate-400">{row.name}</p>
+                  {row.whatsappGroupName && (
+                    <p className="text-xs text-slate-500">📱 {row.whatsappGroupName}</p>
+                  )}
+                  <div className="my-2">
+                    <Sparkline values={row.sparkValues} tone={sparkTone(row.sparkValues)} width={200} height={28} />
+                  </div>
+                  <span className={`inline-block rounded px-2 py-0.5 text-xs ${TONE_CLASSES[row.situacaoTone]}`}>
+                    {row.situacaoLabel}
+                  </span>
+                </div>
+              );
+            })}
           </div>
-        );
-      })}
+        </div>
+      ))}
       {filtered.length === 0 && (
-        <p className="col-span-full py-6 text-center text-sm text-slate-500">
+        <p className="py-6 text-center text-sm text-slate-500">
           Nenhuma conta encontrada para esses filtros.
         </p>
       )}
@@ -317,80 +358,89 @@ export default function AccountsTable({
                 </td>
               </tr>
             )}
-            {filtered.map((row) => {
-              const balanceLabel =
-                row.balance === null
-                  ? "—"
-                  : row.balance.toLocaleString("pt-BR", {
-                      style: "currency",
-                      currency: row.currency,
-                    });
+            {groups.map((group) => (
+              <FragmentGroup key={group.clientName} clientName={group.clientName} colSpan={isAdmin ? 10 : 5}>
+                {group.rows.map((row) => {
+                  const balanceLabel =
+                    row.balance === null
+                      ? "—"
+                      : row.balance.toLocaleString("pt-BR", {
+                          style: "currency",
+                          currency: row.currency,
+                        });
 
-              return (
-                <tr key={row.id} className="border-t border-slate-800">
-                  {isAdmin && (
-                    <td className="px-4 py-3">
-                      <input
-                        type="checkbox"
-                        checked={selected.has(row.id)}
-                        onChange={() => toggleOne(row.id)}
-                        aria-label={`Selecionar ${row.name}`}
-                        className="h-4 w-4 accent-emerald-500"
-                      />
-                    </td>
-                  )}
-                  <td className="px-4 py-3">{row.name}</td>
-                  <td className="px-4 py-3"><PlatformBadge platform={row.platform} /></td>
-                  {isAdmin && (
-                    <td className="px-4 py-3 text-slate-400">
-                      {row.isPrepay === null ? "—" : row.isPrepay ? "pré-pago" : "cartão"}
-                    </td>
-                  )}
-                  <td className="px-4 py-3">{balanceLabel}</td>
-                  <td className="px-4 py-3"><Sparkline values={row.sparkValues} tone={sparkTone(row.sparkValues)} /></td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-block rounded px-2 py-0.5 text-xs ${TONE_CLASSES[row.situacaoTone]}`}
-                    >
-                      {row.situacaoLabel}
-                    </span>
-                  </td>
-                  {isAdmin && (
-                    <td className="px-4 py-3">
-                      <ManagerSelect
-                        accountId={row.id}
-                        currentManagerId={row.managerId}
-                        managers={managers}
-                      />
-                    </td>
-                  )}
-                  {isAdmin && (
-                    <td className="px-4 py-3">
-                      <AutomationToggle accountId={row.id} enabled={row.automationEnabled} />
-                    </td>
-                  )}
-                  {isAdmin && (
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setEditing(row)}
-                          className="rounded bg-slate-700 px-2 py-1 text-xs font-medium text-white hover:bg-slate-600"
+                  return (
+                    <tr key={row.id} className="border-t border-slate-800">
+                      {isAdmin && (
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            checked={selected.has(row.id)}
+                            onChange={() => toggleOne(row.id)}
+                            aria-label={`Selecionar ${row.name}`}
+                            className="h-4 w-4 accent-emerald-500"
+                          />
+                        </td>
+                      )}
+                      <td className="px-4 py-3">
+                        {row.name}
+                        {row.whatsappGroupName && (
+                          <p className="text-xs text-slate-500">📱 {row.whatsappGroupName}</p>
+                        )}
+                      </td>
+                      <td className="px-4 py-3"><PlatformBadge platform={row.platform} /></td>
+                      {isAdmin && (
+                        <td className="px-4 py-3 text-slate-400">
+                          {row.isPrepay === null ? "—" : row.isPrepay ? "pré-pago" : "cartão"}
+                        </td>
+                      )}
+                      <td className="px-4 py-3">{balanceLabel}</td>
+                      <td className="px-4 py-3"><Sparkline values={row.sparkValues} tone={sparkTone(row.sparkValues)} /></td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-block rounded px-2 py-0.5 text-xs ${TONE_CLASSES[row.situacaoTone]}`}
                         >
-                          Editar
-                        </button>
-                        <ForceSendButton
-                          accountId={row.id}
-                          accountName={row.name}
-                          hasWhatsapp={row.hasWhatsapp}
-                        />
-                        <DeleteAccountButton accountId={row.id} accountName={row.name} />
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              );
-            })}
+                          {row.situacaoLabel}
+                        </span>
+                      </td>
+                      {isAdmin && (
+                        <td className="px-4 py-3">
+                          <ManagerSelect
+                            accountId={row.id}
+                            currentManagerId={row.managerId}
+                            managers={managers}
+                          />
+                        </td>
+                      )}
+                      {isAdmin && (
+                        <td className="px-4 py-3">
+                          <AutomationToggle accountId={row.id} enabled={row.automationEnabled} />
+                        </td>
+                      )}
+                      {isAdmin && (
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setEditing(row)}
+                              className="rounded bg-slate-700 px-2 py-1 text-xs font-medium text-white hover:bg-slate-600"
+                            >
+                              Editar
+                            </button>
+                            <ForceSendButton
+                              accountId={row.id}
+                              accountName={row.name}
+                              hasWhatsapp={row.hasWhatsapp}
+                            />
+                            <DeleteAccountButton accountId={row.id} accountName={row.name} />
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </FragmentGroup>
+            ))}
           </tbody>
         </table>
         </div>
