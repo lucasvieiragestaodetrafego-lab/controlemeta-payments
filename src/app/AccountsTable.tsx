@@ -211,9 +211,7 @@ export default function AccountsTable({
                     )}
                   </div>
                   <p className="text-lg font-semibold text-slate-100">{balanceLabel}</p>
-                  {row.name !== group.clientName && (
-                    <p className="text-xs text-slate-400">{row.name}</p>
-                  )}
+                  <p className="text-xs text-slate-400">{row.name}</p>
                   {(row.whatsappGroupName || row.whatsappGroupId) && (
                     <p className="text-xs text-slate-500">📱 {row.whatsappGroupName || row.whatsappGroupId}</p>
                   )}
@@ -343,6 +341,7 @@ export default function AccountsTable({
               <th className="px-4 py-2 font-medium">Tendência</th>
               <th className="px-4 py-2 font-medium">Situação</th>
               {isAdmin && <th className="px-4 py-2 font-medium">Gestor</th>}
+              {isAdmin && <th className="px-4 py-2 font-medium">Grupo disparo</th>}
               {isAdmin && <th className="px-4 py-2 font-medium">Automação</th>}
               {isAdmin && <th className="px-4 py-2 font-medium">Ações</th>}
             </tr>
@@ -351,7 +350,7 @@ export default function AccountsTable({
             {filtered.length === 0 && (
               <tr>
                 <td
-                  colSpan={isAdmin ? 10 : 5}
+                  colSpan={isAdmin ? 11 : 5}
                   className="px-4 py-6 text-center text-slate-500"
                 >
                   {rows.length === 0
@@ -384,12 +383,7 @@ export default function AccountsTable({
                           />
                         </td>
                       )}
-                      <td className="px-4 py-3">
-                        {row.name !== group.clientName && row.name}
-                        {(row.whatsappGroupName || row.whatsappGroupId) && (
-                          <p className="text-xs text-slate-500">📱 {row.whatsappGroupName || row.whatsappGroupId}</p>
-                        )}
-                      </td>
+                      <td className="px-4 py-3">{row.name}</td>
                       <td className="px-4 py-3"><PlatformBadge platform={row.platform} /></td>
                       {isAdmin && (
                         <td className="px-4 py-3 text-slate-400">
@@ -412,6 +406,15 @@ export default function AccountsTable({
                             currentManagerId={row.managerId}
                             managers={managers}
                           />
+                        </td>
+                      )}
+                      {isAdmin && (
+                        <td className="px-4 py-3 text-slate-400">
+                          {row.whatsappGroupName || row.whatsappGroupId ? (
+                            <>📱 {row.whatsappGroupName || row.whatsappGroupId}</>
+                          ) : (
+                            "—"
+                          )}
                         </td>
                       )}
                       {isAdmin && (
