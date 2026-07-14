@@ -11,7 +11,7 @@ export default function RiskChart({
   series: { date: string; count: number }[];
 }) {
   const values = series.map((p) => p.count);
-  const hasSignal = values.length >= 2 && values.some((v) => v > 0);
+  const hasSignal = values.length >= 2;
 
   const W = 640;
   const H = 80;

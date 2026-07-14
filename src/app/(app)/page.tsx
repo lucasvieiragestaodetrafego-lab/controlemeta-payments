@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
@@ -180,10 +181,12 @@ export default async function DashboardPage() {
               </button>
             </form>
             <NewReportModal>
-              <NovaAutomacaoSection
-                managers={managersList}
-                defaultWhatsappGroupId={defaultWhatsappGroupId}
-              />
+              <Suspense fallback={<p className="text-sm text-slate-500">Carregando contas do Meta…</p>}>
+                <NovaAutomacaoSection
+                  managers={managersList}
+                  defaultWhatsappGroupId={defaultWhatsappGroupId}
+                />
+              </Suspense>
             </NewReportModal>
           </div>
         )}

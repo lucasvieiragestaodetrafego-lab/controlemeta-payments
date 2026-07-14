@@ -13,7 +13,7 @@ export function sparklinePoints(values: number[], width: number, height: number)
   const min = Math.min(...values);
   const max = Math.max(...values);
   const span = max - min;
-  const stepX = values.length === 1 ? 0 : width / (values.length - 1);
+  const stepX = width / (values.length - 1);
 
   return values
     .map((v, i) => {
