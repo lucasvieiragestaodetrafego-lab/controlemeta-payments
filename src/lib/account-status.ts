@@ -48,3 +48,11 @@ export function getSituacao(
 
   return { label: "Ativa", tone: "green", travada: false };
 }
+
+/**
+ * "Em risco" = conta parada (travada) OU com saldo baixo (amber).
+ * Usado no card de resumo e no gráfico de contas em risco ao longo do tempo.
+ */
+export function isAtRisk(situacao: Situacao): boolean {
+  return situacao.travada || situacao.tone === "amber";
+}
