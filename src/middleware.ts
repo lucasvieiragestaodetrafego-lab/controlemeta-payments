@@ -8,9 +8,10 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Roda em tudo, exceto: arquivos estáticos do Next, favicon e a rota
+     * Roda em tudo, exceto: arquivos estáticos do Next, favicon, ícone/logo
+     * (precisam carregar mesmo deslogado, ex: na tela de login) e a rota
      * do cron (que usa CRON_SECRET, não login de usuário).
      */
-    "/((?!_next/static|_next/image|favicon.ico|api/cron).*)",
+    "/((?!_next/static|_next/image|favicon.ico|icon.png|logo-icon.png|logo-full.png|api/cron).*)",
   ],
 };
