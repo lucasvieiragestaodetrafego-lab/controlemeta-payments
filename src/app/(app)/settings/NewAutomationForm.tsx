@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createAccount } from "@/app/actions";
+import GroupSelect from "@/app/GroupSelect";
 
 interface MetaAccountOption {
   id: string;
@@ -33,7 +34,6 @@ export default function NewAutomationForm({
     const selected = metaAccounts.find((a) => a.id === e.target.value);
     if (selected) {
       setName(selected.name);
-      setClientName(selected.name);
       setIsPrepay(selected.isPrepay ? "true" : "false");
     }
   }
@@ -104,6 +104,10 @@ export default function NewAutomationForm({
           placeholder="ex: Clínica Vida Nova"
           className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-slate-100"
         />
+        <p className="mt-1 text-xs text-slate-500">
+          Define o agrupamento na tabela de Relatórios. Use o mesmo nome de um cliente já
+          cadastrado para juntar esta conta às automações dele.
+        </p>
       </div>
 
       <div>
@@ -136,17 +140,12 @@ export default function NewAutomationForm({
 
       <div className="sm:col-span-2">
         <label className="block text-xs text-slate-400">
-          2. WhatsApp de destino (grupo ou número que recebe o alerta)
+          2. WhatsApp de destino (grupo que recebe o alerta)
         </label>
-        <input
-          name="whatsapp_group_id"
-          defaultValue={defaultWhatsappGroupId}
-          placeholder="ex: 120363421960030596-group"
-          className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-slate-100"
-        />
+        <GroupSelect defaultGroupId={defaultWhatsappGroupId || null} defaultGroupName={null} />
         <p className="mt-1 text-xs text-slate-500">
-          Já vem preenchido com o grupo de alertas atual. Você pode trocar por automação e
-          alterar depois quando quiser.
+          Escolha o grupo pela lista. Você pode trocar por automação e alterar depois quando
+          quiser.
         </p>
       </div>
 

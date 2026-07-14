@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition, type ReactNode } from "react";
 import type { SituacaoTone } from "@/lib/account-status";
 import ManagerSelect from "@/app/ManagerSelect";
 import AutomationToggle from "@/app/AutomationToggle";
@@ -10,10 +10,13 @@ import EditAccountModal from "@/app/EditAccountModal";
 import { deleteAccounts } from "@/app/actions";
 import Sparkline from "@/app/Sparkline";
 import RiskChart from "@/app/RiskChart";
+import { groupAccountsByClient } from "@/lib/group-accounts";
 
 export interface AccountRow {
   id: string;
   name: string;
+  clientId: string;
+  clientName: string;
   isPrepay: boolean | null;
   currency: string;
   balance: number | null;
@@ -27,6 +30,7 @@ export interface AccountRow {
   sparkValues: number[];
   alertThreshold: number;
   whatsappGroupId: string | null;
+  whatsappGroupName: string | null;
   customMessage: string | null;
 }
 
@@ -44,6 +48,30 @@ const TONE_CLASSES: Record<SituacaoTone, string> = {
 
 const selectClass =
   "rounded border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100";
+
+/** Renderiza a linha de cabeçalho do cliente seguida das linhas passadas como children. */
+function FragmentGroup({
+  clientName,
+  colSpan,
+  children,
+}: {
+  clientName: string;
+  colSpan: number;
+  children: ReactNode;
+}) {
+  return (
+    <>
+      <tr>
+        <td colSpan={colSpan} className="border-t-2 border-slate-700/60 p-0">
+          <div className="border-l-4 border-sky-500 bg-gradient-to-r from-slate-800/80 to-slate-800/20 px-4 py-2.5 text-sm font-semibold tracking-wide text-slate-200">
+            {clientName}
+          </div>
+        </td>
+      </tr>
+      {children}
+    </>
+  );
+}
 
 export default function AccountsTable({
   rows,
@@ -96,6 +124,8 @@ export default function AccountsTable({
       return true;
     });
   }, [rows, search, situacao, tipo, gestor, automacao]);
+
+  const groups = useMemo(() => groupAccountsByClient(filtered), [filtered]);
 
   function toggleOne(id: string) {
     setSelected((prev) => {
@@ -154,39 +184,51 @@ export default function AccountsTable({
   }
 
   const cardsView = (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {filtered.map((row) => {
-        const balanceLabel =
-          row.balance === null
-            ? "—"
-            : row.balance.toLocaleString("pt-BR", { style: "currency", currency: row.currency });
-        return (
-          <div key={row.id} className="rounded-lg border border-slate-800 bg-slate-900 p-4">
-            <div className="mb-2 flex items-start justify-between">
-              <PlatformBadge platform={row.platform} />
-              {isAdmin && (
-                <button
-                  type="button"
-                  onClick={() => setEditing(row)}
-                  className="text-xs text-sky-400 hover:text-sky-300"
-                >
-                  Editar
-                </button>
-              )}
-            </div>
-            <p className="text-lg font-semibold text-slate-100">{balanceLabel}</p>
-            <p className="text-xs text-slate-400">{row.name}</p>
-            <div className="my-2">
-              <Sparkline values={row.sparkValues} tone={sparkTone(row.sparkValues)} width={200} height={28} />
-            </div>
-            <span className={`inline-block rounded px-2 py-0.5 text-xs ${TONE_CLASSES[row.situacaoTone]}`}>
-              {row.situacaoLabel}
-            </span>
+    <div className="space-y-5">
+      {groups.map((group) => (
+        <div key={group.clientName}>
+          <h3 className="mb-3 border-l-4 border-sky-500 bg-gradient-to-r from-slate-800/80 to-slate-800/20 px-3 py-2 text-sm font-semibold tracking-wide text-slate-200">
+            {group.clientName}
+          </h3>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {group.rows.map((row) => {
+              const balanceLabel =
+                row.balance === null
+                  ? "—"
+                  : row.balance.toLocaleString("pt-BR", { style: "currency", currency: row.currency });
+              return (
+                <div key={row.id} className="rounded-lg border border-slate-800 bg-slate-900 p-4">
+                  <div className="mb-2 flex items-start justify-between">
+                    <PlatformBadge platform={row.platform} />
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        onClick={() => setEditing(row)}
+                        className="text-xs text-sky-400 hover:text-sky-300"
+                      >
+                        Editar
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-lg font-semibold text-slate-100">{balanceLabel}</p>
+                  <p className="text-xs text-slate-400">{row.name}</p>
+                  {(row.whatsappGroupName || row.whatsappGroupId) && (
+                    <p className="text-xs text-slate-500">📱 {row.whatsappGroupName || row.whatsappGroupId}</p>
+                  )}
+                  <div className="my-2">
+                    <Sparkline values={row.sparkValues} tone={sparkTone(row.sparkValues)} width={200} height={28} />
+                  </div>
+                  <span className={`inline-block rounded px-2 py-0.5 text-xs ${TONE_CLASSES[row.situacaoTone]}`}>
+                    {row.situacaoLabel}
+                  </span>
+                </div>
+              );
+            })}
           </div>
-        );
-      })}
+        </div>
+      ))}
       {filtered.length === 0 && (
-        <p className="col-span-full py-6 text-center text-sm text-slate-500">
+        <p className="py-6 text-center text-sm text-slate-500">
           Nenhuma conta encontrada para esses filtros.
         </p>
       )}
@@ -299,6 +341,7 @@ export default function AccountsTable({
               <th className="px-4 py-2 font-medium">Tendência</th>
               <th className="px-4 py-2 font-medium">Situação</th>
               {isAdmin && <th className="px-4 py-2 font-medium">Gestor</th>}
+              {isAdmin && <th className="px-4 py-2 font-medium">Grupo disparo</th>}
               {isAdmin && <th className="px-4 py-2 font-medium">Automação</th>}
               {isAdmin && <th className="px-4 py-2 font-medium">Ações</th>}
             </tr>
@@ -307,7 +350,7 @@ export default function AccountsTable({
             {filtered.length === 0 && (
               <tr>
                 <td
-                  colSpan={isAdmin ? 10 : 5}
+                  colSpan={isAdmin ? 11 : 5}
                   className="px-4 py-6 text-center text-slate-500"
                 >
                   {rows.length === 0
@@ -316,80 +359,93 @@ export default function AccountsTable({
                 </td>
               </tr>
             )}
-            {filtered.map((row) => {
-              const balanceLabel =
-                row.balance === null
-                  ? "—"
-                  : row.balance.toLocaleString("pt-BR", {
-                      style: "currency",
-                      currency: row.currency,
-                    });
+            {groups.map((group) => (
+              <FragmentGroup key={group.clientName} clientName={group.clientName} colSpan={isAdmin ? 10 : 5}>
+                {group.rows.map((row) => {
+                  const balanceLabel =
+                    row.balance === null
+                      ? "—"
+                      : row.balance.toLocaleString("pt-BR", {
+                          style: "currency",
+                          currency: row.currency,
+                        });
 
-              return (
-                <tr key={row.id} className="border-t border-slate-800">
-                  {isAdmin && (
-                    <td className="px-4 py-3">
-                      <input
-                        type="checkbox"
-                        checked={selected.has(row.id)}
-                        onChange={() => toggleOne(row.id)}
-                        aria-label={`Selecionar ${row.name}`}
-                        className="h-4 w-4 accent-emerald-500"
-                      />
-                    </td>
-                  )}
-                  <td className="px-4 py-3">{row.name}</td>
-                  <td className="px-4 py-3"><PlatformBadge platform={row.platform} /></td>
-                  {isAdmin && (
-                    <td className="px-4 py-3 text-slate-400">
-                      {row.isPrepay === null ? "—" : row.isPrepay ? "pré-pago" : "cartão"}
-                    </td>
-                  )}
-                  <td className="px-4 py-3">{balanceLabel}</td>
-                  <td className="px-4 py-3"><Sparkline values={row.sparkValues} tone={sparkTone(row.sparkValues)} /></td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-block rounded px-2 py-0.5 text-xs ${TONE_CLASSES[row.situacaoTone]}`}
-                    >
-                      {row.situacaoLabel}
-                    </span>
-                  </td>
-                  {isAdmin && (
-                    <td className="px-4 py-3">
-                      <ManagerSelect
-                        accountId={row.id}
-                        currentManagerId={row.managerId}
-                        managers={managers}
-                      />
-                    </td>
-                  )}
-                  {isAdmin && (
-                    <td className="px-4 py-3">
-                      <AutomationToggle accountId={row.id} enabled={row.automationEnabled} />
-                    </td>
-                  )}
-                  {isAdmin && (
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setEditing(row)}
-                          className="rounded bg-slate-700 px-2 py-1 text-xs font-medium text-white hover:bg-slate-600"
+                  return (
+                    <tr key={row.id} className="border-t border-slate-800">
+                      {isAdmin && (
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            checked={selected.has(row.id)}
+                            onChange={() => toggleOne(row.id)}
+                            aria-label={`Selecionar ${row.name}`}
+                            className="h-4 w-4 accent-emerald-500"
+                          />
+                        </td>
+                      )}
+                      <td className="px-4 py-3">{row.name}</td>
+                      <td className="px-4 py-3"><PlatformBadge platform={row.platform} /></td>
+                      {isAdmin && (
+                        <td className="px-4 py-3 text-slate-400">
+                          {row.isPrepay === null ? "—" : row.isPrepay ? "pré-pago" : "cartão"}
+                        </td>
+                      )}
+                      <td className="px-4 py-3">{balanceLabel}</td>
+                      <td className="px-4 py-3"><Sparkline values={row.sparkValues} tone={sparkTone(row.sparkValues)} /></td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-block rounded px-2 py-0.5 text-xs ${TONE_CLASSES[row.situacaoTone]}`}
                         >
-                          Editar
-                        </button>
-                        <ForceSendButton
-                          accountId={row.id}
-                          accountName={row.name}
-                          hasWhatsapp={row.hasWhatsapp}
-                        />
-                        <DeleteAccountButton accountId={row.id} accountName={row.name} />
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              );
-            })}
+                          {row.situacaoLabel}
+                        </span>
+                      </td>
+                      {isAdmin && (
+                        <td className="px-4 py-3">
+                          <ManagerSelect
+                            accountId={row.id}
+                            currentManagerId={row.managerId}
+                            managers={managers}
+                          />
+                        </td>
+                      )}
+                      {isAdmin && (
+                        <td className="px-4 py-3 text-slate-400">
+                          {row.whatsappGroupName || row.whatsappGroupId ? (
+                            <>📱 {row.whatsappGroupName || row.whatsappGroupId}</>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                      )}
+                      {isAdmin && (
+                        <td className="px-4 py-3">
+                          <AutomationToggle accountId={row.id} enabled={row.automationEnabled} />
+                        </td>
+                      )}
+                      {isAdmin && (
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setEditing(row)}
+                              className="rounded bg-slate-700 px-2 py-1 text-xs font-medium text-white hover:bg-slate-600"
+                            >
+                              Editar
+                            </button>
+                            <ForceSendButton
+                              accountId={row.id}
+                              accountName={row.name}
+                              hasWhatsapp={row.hasWhatsapp}
+                            />
+                            <DeleteAccountButton accountId={row.id} accountName={row.name} />
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </FragmentGroup>
+            ))}
           </tbody>
         </table>
         </div>

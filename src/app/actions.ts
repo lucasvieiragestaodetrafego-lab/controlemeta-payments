@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { checkAllBalances, forceSendAlert } from "@/lib/check-balances";
+import { listWhatsAppGroupsCached, type WhatsAppGroup } from "@/lib/zapi";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -213,13 +214,24 @@ export async function updateTemplate(formData: FormData) {
   revalidatePath("/settings");
 }
 
+/** Lista os grupos do WhatsApp disponíveis, para o seletor nos modais de relatório. */
+export async function listWhatsAppGroupsAction(): Promise<WhatsAppGroup[]> {
+  await requireAdmin();
+  return listWhatsAppGroupsCached();
+}
+
 /** Salva as edições de uma conta feitas na tela de Configurações. */
 export async function updateAccount(formData: FormData) {
   await requireAdmin();
 
   const id = formData.get("id") as string;
+  const clientId = formData.get("client_id") as string;
+  const clientName = ((formData.get("client_name") as string) || "").trim();
   const name = formData.get("name") as string;
   const whatsappGroupId = ((formData.get("whatsapp_group_id") as string) || "").trim() || null;
+  const whatsappGroupName = whatsappGroupId
+    ? ((formData.get("whatsapp_group_name") as string) || "").trim() || null
+    : null;
   const automationEnabled = formData.get("automation_enabled") === "on";
   const alertThreshold = Number(formData.get("alert_threshold") || "100");
   const customMessage = ((formData.get("custom_message") as string) || "").trim() || null;
@@ -230,6 +242,7 @@ export async function updateAccount(formData: FormData) {
     .update({
       name,
       whatsapp_group_id: whatsappGroupId,
+      whatsapp_group_name: whatsappGroupName,
       automation_enabled: automationEnabled,
       alert_threshold: alertThreshold,
       custom_message: customMessage,
@@ -237,6 +250,15 @@ export async function updateAccount(formData: FormData) {
     .eq("id", id);
 
   if (error) throw new Error(`Erro ao salvar conta: ${error.message}`);
+
+  if (clientId && clientName) {
+    const { error: clientError } = await admin
+      .from("clients")
+      .update({ name: clientName })
+      .eq("id", clientId);
+
+    if (clientError) throw new Error(`Erro ao salvar nome do cliente: ${clientError.message}`);
+  }
 
   revalidatePath("/settings");
   revalidatePath("/");
@@ -251,6 +273,9 @@ export async function createAccount(formData: FormData) {
   const clientName = (formData.get("client_name") as string).trim();
   const managerId = formData.get("manager_id") as string;
   const whatsappGroupId = ((formData.get("whatsapp_group_id") as string) || "").trim() || null;
+  const whatsappGroupName = whatsappGroupId
+    ? ((formData.get("whatsapp_group_name") as string) || "").trim() || null
+    : null;
   const alertThreshold = Number(formData.get("alert_threshold") || "100");
   const currency = ((formData.get("currency") as string) || "BRL").trim();
   const isPrepayRaw = formData.get("is_prepay") as string;
@@ -289,6 +314,7 @@ export async function createAccount(formData: FormData) {
     client_id: clientId,
     manager_id: managerId,
     whatsapp_group_id: whatsappGroupId,
+    whatsapp_group_name: whatsappGroupName,
     alert_threshold: alertThreshold,
     currency,
     is_prepay: isPrepay,

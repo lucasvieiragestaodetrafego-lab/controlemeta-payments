@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Modal from "@/app/Modal";
 import { updateAccount } from "@/app/actions";
 import type { AccountRow } from "@/app/AccountsTable";
+import GroupSelect from "@/app/GroupSelect";
 
 export default function EditAccountModal({
   row,
@@ -36,19 +37,30 @@ export default function EditAccountModal({
     <Modal open={open} onClose={onClose} title={`Editar: ${row.name}`}>
       <form action={handleSubmit} className="grid grid-cols-1 gap-3">
         <input type="hidden" name="id" value={row.id} />
+        <input type="hidden" name="client_id" value={row.clientId} />
+
+        <div>
+          <label className="block text-xs text-slate-400">Nome do cliente</label>
+          <input name="client_name" defaultValue={row.clientName} className={inputClass} />
+          <p className="mt-1 text-xs text-slate-500">
+            Aparece como cabeçalho na tabela de Relatórios. Afeta todas as contas desse mesmo
+            cliente, não só esta.
+          </p>
+        </div>
 
         <div>
           <label className="block text-xs text-slate-400">Nome da conta</label>
           <input name="name" defaultValue={row.name} className={inputClass} />
+          <p className="mt-1 text-xs text-slate-500">
+            Aparece na linha desta conta específica, dentro do grupo do cliente.
+          </p>
         </div>
 
         <div>
-          <label className="block text-xs text-slate-400">Grupo/telefone WhatsApp</label>
-          <input
-            name="whatsapp_group_id"
-            defaultValue={row.whatsappGroupId ?? ""}
-            placeholder="ex: 120363421960030596-group"
-            className={inputClass}
+          <label className="block text-xs text-slate-400">Grupo do WhatsApp</label>
+          <GroupSelect
+            defaultGroupId={row.whatsappGroupId}
+            defaultGroupName={row.whatsappGroupName}
           />
         </div>
 
