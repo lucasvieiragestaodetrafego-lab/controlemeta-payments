@@ -8,9 +8,27 @@ if (!dbUrl) {
   process.exit(1);
 }
 
+// Remove aspas envolvendo o valor, caso tenham sido exportadas junto (ex: ao
+// copiar direto de um .env.local que usa SUPABASE_DB_URL="postgres://...").
+if (
+  (dbUrl.startsWith('"') && dbUrl.endsWith('"')) ||
+  (dbUrl.startsWith("'") && dbUrl.endsWith("'"))
+) {
+  dbUrl = dbUrl.slice(1, -1);
+}
+
 // Corrige connection strings com caracteres reservados (ex: "@") não
-// codificados na senha, que quebram o parsing padrão de URL.
+// codificados na senha, que quebram o parsing padrão de URL. Só codifica
+// quando a string ainda não é uma URL válida — senão re-codificaria uma
+// senha que já veio percent-encoded do .env.local (ex: "%40" virando "%2540").
 function sanitizeConnectionString(url) {
+  try {
+    new URL(url);
+    return url;
+  } catch {
+    // segue para tentar corrigir abaixo
+  }
+
   const match = url.match(/^(postgres(?:ql)?:\/\/)(.+)@([^@/]+\/.*)$/);
   if (!match) return url;
   const [, scheme, credentials, hostAndRest] = match;
