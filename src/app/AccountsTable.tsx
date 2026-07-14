@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import type { SituacaoTone } from "@/lib/account-status";
 import ManagerSelect from "@/app/ManagerSelect";
 import AutomationToggle from "@/app/AutomationToggle";
@@ -64,6 +64,15 @@ export default function AccountsTable({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
   const [editing, setEditing] = useState<AccountRow | null>(null);
+  const [view, setView] = useState<"table" | "cards">("table");
+  useEffect(() => {
+    const saved = localStorage.getItem("relatorios-view");
+    if (saved === "cards" || saved === "table") setView(saved);
+  }, []);
+  function changeView(v: "table" | "cards") {
+    setView(v);
+    localStorage.setItem("relatorios-view", v);
+  }
 
   const situacaoOptions = useMemo(
     () => Array.from(new Set(rows.map((r) => r.situacaoLabel))).sort(),
@@ -144,9 +153,67 @@ export default function AccountsTable({
     return "flat";
   }
 
+  const cardsView = (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {filtered.map((row) => {
+        const balanceLabel =
+          row.balance === null
+            ? "—"
+            : row.balance.toLocaleString("pt-BR", { style: "currency", currency: row.currency });
+        return (
+          <div key={row.id} className="rounded-lg border border-slate-800 bg-slate-900 p-4">
+            <div className="mb-2 flex items-start justify-between">
+              <PlatformBadge platform={row.platform} />
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => setEditing(row)}
+                  className="text-xs text-sky-400 hover:text-sky-300"
+                >
+                  Editar
+                </button>
+              )}
+            </div>
+            <p className="text-lg font-semibold text-slate-100">{balanceLabel}</p>
+            <p className="text-xs text-slate-400">{row.name}</p>
+            <div className="my-2">
+              <Sparkline values={row.sparkValues} tone={sparkTone(row.sparkValues)} width={200} height={28} />
+            </div>
+            <span className={`inline-block rounded px-2 py-0.5 text-xs ${TONE_CLASSES[row.situacaoTone]}`}>
+              {row.situacaoLabel}
+            </span>
+          </div>
+        );
+      })}
+      {filtered.length === 0 && (
+        <p className="col-span-full py-6 text-center text-sm text-slate-500">
+          Nenhuma conta encontrada para esses filtros.
+        </p>
+      )}
+    </div>
+  );
+
   return (
     <div>
       <RiskChart series={riskSeries} />
+      <div className="mb-3 flex justify-end">
+        <div className="inline-flex overflow-hidden rounded border border-slate-700 text-xs">
+          <button
+            type="button"
+            onClick={() => changeView("table")}
+            className={`px-3 py-1.5 ${view === "table" ? "bg-slate-700 text-slate-100" : "text-slate-400 hover:bg-slate-800"}`}
+          >
+            ▤ Tabela
+          </button>
+          <button
+            type="button"
+            onClick={() => changeView("cards")}
+            className={`px-3 py-1.5 ${view === "cards" ? "bg-slate-700 text-slate-100" : "text-slate-400 hover:bg-slate-800"}`}
+          >
+            ▦ Cards
+          </button>
+        </div>
+      </div>
       <div className="mb-3 flex flex-wrap gap-2">
         <input
           type="search"
@@ -209,7 +276,8 @@ export default function AccountsTable({
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-slate-800">
+      {view === "table" ? (
+        <div className="overflow-x-auto rounded-lg border border-slate-800">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-900 text-slate-400">
             <tr>
@@ -324,7 +392,10 @@ export default function AccountsTable({
             })}
           </tbody>
         </table>
-      </div>
+        </div>
+      ) : (
+        cardsView
+      )}
 
       {editing && (
         <EditAccountModal row={editing} open={!!editing} onClose={() => setEditing(null)} />
