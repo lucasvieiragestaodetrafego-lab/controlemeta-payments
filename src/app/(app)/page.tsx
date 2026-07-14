@@ -182,7 +182,7 @@ export default async function DashboardPage() {
   const defaultWhatsappGroupId = process.env.ZAPI_GROUP_IDS ?? "";
 
   return (
-    <main className="mx-auto max-w-6xl p-6">
+    <main className="mx-auto max-w-[1600px] p-6">
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">Alertas de saldo</h1>

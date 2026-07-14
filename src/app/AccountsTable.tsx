@@ -343,7 +343,9 @@ export default function AccountsTable({
               {isAdmin && <th className="whitespace-nowrap px-4 py-2 font-medium">Gestor</th>}
               {isAdmin && <th className="whitespace-nowrap px-4 py-2 font-medium">Grupo disparo</th>}
               {isAdmin && <th className="whitespace-nowrap px-4 py-2 font-medium">Automação</th>}
-              {isAdmin && <th className="whitespace-nowrap px-4 py-2 font-medium">Ações</th>}
+              {isAdmin && (
+                <th className="w-[1%] whitespace-nowrap px-4 py-2 font-medium">Ações</th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -426,7 +428,7 @@ export default function AccountsTable({
                         </td>
                       )}
                       {isAdmin && (
-                        <td className="whitespace-nowrap px-4 py-3">
+                        <td className="w-[1%] whitespace-nowrap px-4 py-3">
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
