@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { runCheckNow } from "@/app/actions";
 import { getSituacao, type SituacaoTone } from "@/lib/account-status";
+import { buildRiskSeries } from "@/lib/risk-series";
 import AccountsTable, { type AccountRow } from "@/app/AccountsTable";
 
 interface DashboardAccount {
@@ -15,6 +16,7 @@ interface DashboardAccount {
   automation_enabled: boolean;
   manager_id: string | null;
   whatsapp_group_id: string | null;
+  platform: string;
 }
 
 interface LatestSnapshot {
@@ -55,7 +57,7 @@ export default async function DashboardPage() {
   let accountsQuery = admin
     .from("ad_accounts")
     .select(
-      "id, name, currency, is_prepay, alert_threshold, automation_enabled, manager_id, whatsapp_group_id",
+      "id, name, currency, is_prepay, alert_threshold, automation_enabled, manager_id, whatsapp_group_id, platform",
     )
     .eq("is_active", true)
     .order("name");
@@ -78,6 +80,32 @@ export default async function DashboardPage() {
   const snapshots = new Map(
     (snapshotsData ?? []).map((s) => [s.ad_account_id, s as LatestSnapshot]),
   );
+
+  const since = new Date();
+  since.setDate(since.getDate() - 14);
+  const { data: historyData } = accountIds.length
+    ? await admin
+        .from("balance_snapshots")
+        .select("ad_account_id, balance, account_status, checked_at")
+        .in("ad_account_id", accountIds)
+        .gte("checked_at", since.toISOString())
+        .order("checked_at", { ascending: true })
+    : { data: [] };
+
+  const history = (historyData ?? []) as {
+    ad_account_id: string;
+    balance: number | null;
+    account_status: string | null;
+    checked_at: string;
+  }[];
+
+  const sparkByAccount = new Map<string, number[]>();
+  for (const h of history) {
+    if (h.balance == null) continue;
+    const arr = sparkByAccount.get(h.ad_account_id) ?? [];
+    arr.push(Number(h.balance));
+    sparkByAccount.set(h.ad_account_id, arr);
+  }
 
   const managersList = ((await admin.from("managers").select("id, name").order("name")).data ??
     []) as { id: string; name: string }[];
@@ -105,8 +133,25 @@ export default async function DashboardPage() {
       managerName: account.manager_id ? managerNameById.get(account.manager_id) ?? "—" : "—",
       hasWhatsapp: !!account.whatsapp_group_id,
       travada: situacao.travada,
+      platform: account.platform,
+      sparkValues: sparkByAccount.get(account.id) ?? [],
     };
   });
+
+  const riskSeries = buildRiskSeries(
+    history.map((h) => ({
+      adAccountId: h.ad_account_id,
+      balance: h.balance,
+      accountStatus: h.account_status,
+      checkedAt: h.checked_at,
+    })),
+    accounts.map((a) => ({
+      id: a.id,
+      isPrepay: a.is_prepay,
+      alertThreshold: a.alert_threshold,
+    })),
+    14,
+  );
 
   const total = rows.length;
   const ativas = rows.filter((r) => r.situacaoLabel === "Ativa").length;
@@ -146,7 +191,7 @@ export default async function DashboardPage() {
         </section>
       )}
 
-      <AccountsTable rows={rows} isAdmin={isAdmin} managers={managersList} />
+      <AccountsTable rows={rows} isAdmin={isAdmin} managers={managersList} riskSeries={riskSeries} />
     </main>
   );
 }
