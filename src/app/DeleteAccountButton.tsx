@@ -29,7 +29,7 @@ export default function DeleteAccountButton({
       disabled={isPending}
       title="Excluir conta"
       aria-label={`Excluir ${accountName}`}
-      className="rounded p-1 text-slate-500 hover:bg-red-950 hover:text-red-400 disabled:opacity-50"
+      className="rounded-md border border-slate-700 p-1.5 text-slate-500 hover:border-red-800 hover:bg-red-950 hover:text-red-400 disabled:opacity-50"
     >
       {/* ícone de lixeira */}
       <svg
