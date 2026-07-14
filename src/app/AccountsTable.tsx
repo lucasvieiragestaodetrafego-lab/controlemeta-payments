@@ -15,6 +15,7 @@ import { groupAccountsByClient } from "@/lib/group-accounts";
 export interface AccountRow {
   id: string;
   name: string;
+  clientId: string;
   clientName: string;
   isPrepay: boolean | null;
   currency: string;
@@ -60,12 +61,11 @@ function FragmentGroup({
 }) {
   return (
     <>
-      <tr className="bg-slate-950/60">
-        <td
-          colSpan={colSpan}
-          className="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500"
-        >
-          {clientName}
+      <tr>
+        <td colSpan={colSpan} className="border-t-2 border-slate-700/60 p-0">
+          <div className="border-l-4 border-sky-500 bg-gradient-to-r from-slate-800/80 to-slate-800/20 px-4 py-2.5 text-sm font-semibold tracking-wide text-slate-200">
+            {clientName}
+          </div>
         </td>
       </tr>
       {children}
@@ -187,7 +187,7 @@ export default function AccountsTable({
     <div className="space-y-5">
       {groups.map((group) => (
         <div key={group.clientName}>
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <h3 className="mb-3 border-l-4 border-sky-500 bg-gradient-to-r from-slate-800/80 to-slate-800/20 px-3 py-2 text-sm font-semibold tracking-wide text-slate-200">
             {group.clientName}
           </h3>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

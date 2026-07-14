@@ -21,6 +21,7 @@ interface DashboardAccount {
   whatsapp_group_name: string | null;
   platform: string;
   custom_message: string | null;
+  client_id: string;
   clients: { name: string } | null;
 }
 
@@ -62,7 +63,7 @@ export default async function DashboardPage() {
   let accountsQuery = admin
     .from("ad_accounts")
     .select(
-      "id, name, currency, is_prepay, alert_threshold, automation_enabled, manager_id, whatsapp_group_id, whatsapp_group_name, platform, custom_message, clients(name)",
+      "id, name, currency, is_prepay, alert_threshold, automation_enabled, manager_id, whatsapp_group_id, whatsapp_group_name, platform, custom_message, client_id, clients(name)",
     )
     .eq("is_active", true)
     .order("name");
@@ -152,6 +153,7 @@ export default async function DashboardPage() {
       alertThreshold: account.alert_threshold,
       whatsappGroupId: account.whatsapp_group_id,
       customMessage: account.custom_message,
+      clientId: account.client_id,
       clientName: account.clients?.name ?? account.name,
       whatsappGroupName: account.whatsapp_group_name,
     };

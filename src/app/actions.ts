@@ -225,6 +225,8 @@ export async function updateAccount(formData: FormData) {
   await requireAdmin();
 
   const id = formData.get("id") as string;
+  const clientId = formData.get("client_id") as string;
+  const clientName = ((formData.get("client_name") as string) || "").trim();
   const name = formData.get("name") as string;
   const whatsappGroupId = ((formData.get("whatsapp_group_id") as string) || "").trim() || null;
   const whatsappGroupName = whatsappGroupId
@@ -248,6 +250,15 @@ export async function updateAccount(formData: FormData) {
     .eq("id", id);
 
   if (error) throw new Error(`Erro ao salvar conta: ${error.message}`);
+
+  if (clientId && clientName) {
+    const { error: clientError } = await admin
+      .from("clients")
+      .update({ name: clientName })
+      .eq("id", clientId);
+
+    if (clientError) throw new Error(`Erro ao salvar nome do cliente: ${clientError.message}`);
+  }
 
   revalidatePath("/settings");
   revalidatePath("/");
