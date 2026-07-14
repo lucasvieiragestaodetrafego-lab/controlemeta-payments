@@ -433,8 +433,20 @@ export default function AccountsTable({
                             <button
                               type="button"
                               onClick={() => setEditing(row)}
-                              className="rounded bg-slate-700 px-2 py-1 text-xs font-medium text-white hover:bg-slate-600"
+                              className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-700"
                             >
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="h-3.5 w-3.5"
+                              >
+                                <path d="M12 20h9" />
+                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                              </svg>
                               Editar
                             </button>
                             <ForceSendButton

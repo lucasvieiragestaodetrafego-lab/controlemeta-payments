@@ -43,9 +43,21 @@ export default function ForceSendButton({
       onClick={handleClick}
       disabled={isPending}
       title="Disparar alerta agora"
-      className="rounded border border-sky-800 px-2 py-1 text-xs text-sky-300 hover:bg-sky-950 disabled:opacity-50"
+      className="inline-flex items-center gap-1 rounded-md border border-sky-700 bg-sky-950/40 px-2.5 py-1.5 text-xs font-medium text-sky-300 hover:bg-sky-900/40 disabled:opacity-50"
     >
-      {isPending ? "Enviando…" : "📨 Disparar"}
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="h-3.5 w-3.5"
+      >
+        <path d="m22 2-7 20-4-9-9-4Z" />
+        <path d="M22 2 11 13" />
+      </svg>
+      {isPending ? "Enviando…" : "Disparar"}
     </button>
   );
 }
