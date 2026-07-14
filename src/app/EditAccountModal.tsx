@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Modal from "@/app/Modal";
 import { updateAccount } from "@/app/actions";
 import type { AccountRow } from "@/app/AccountsTable";
+import GroupSelect from "@/app/GroupSelect";
 
 export default function EditAccountModal({
   row,
@@ -43,12 +44,10 @@ export default function EditAccountModal({
         </div>
 
         <div>
-          <label className="block text-xs text-slate-400">Grupo/telefone WhatsApp</label>
-          <input
-            name="whatsapp_group_id"
-            defaultValue={row.whatsappGroupId ?? ""}
-            placeholder="ex: 120363421960030596-group"
-            className={inputClass}
+          <label className="block text-xs text-slate-400">Grupo do WhatsApp</label>
+          <GroupSelect
+            defaultGroupId={row.whatsappGroupId}
+            defaultGroupName={row.whatsappGroupName}
           />
         </div>
 

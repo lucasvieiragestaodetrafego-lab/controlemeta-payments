@@ -27,6 +27,7 @@ export interface AccountRow {
   sparkValues: number[];
   alertThreshold: number;
   whatsappGroupId: string | null;
+  whatsappGroupName: string | null;
   customMessage: string | null;
 }
 
