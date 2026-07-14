@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logout } from "@/app/login/actions";
@@ -41,15 +42,39 @@ export default function AppShell({
         }`}
       >
         <div className="flex items-center justify-between px-3 py-4">
-          {open && <span className="text-sm font-semibold text-slate-100">Meta Payments</span>}
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            title={open ? "Recolher menu" : "Expandir menu"}
-            className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
-          >
-            {open ? "«" : "»"}
-          </button>
+          {open ? (
+            <>
+              <div className="flex min-w-0 items-center gap-2">
+                <Image
+                  src="/logo-icon.png"
+                  alt="Meta Payments"
+                  width={28}
+                  height={28}
+                  className="shrink-0 rounded"
+                />
+                <span className="truncate text-sm font-semibold text-slate-100">
+                  Meta Payments
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                title="Recolher menu"
+                className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+              >
+                «
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              title="Expandir menu"
+              className="mx-auto rounded hover:opacity-80"
+            >
+              <Image src="/logo-icon.png" alt="Expandir menu" width={28} height={28} className="rounded" />
+            </button>
+          )}
         </div>
 
         <nav className="flex flex-1 flex-col gap-1 px-2">
