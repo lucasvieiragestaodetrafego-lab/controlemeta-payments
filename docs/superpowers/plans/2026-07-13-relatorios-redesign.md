@@ -22,7 +22,7 @@
 ## Estrutura de arquivos
 
 **Criar:**
-- `supabase/migrations/0002_platform.sql` — coluna `platform`.
+- `supabase/migrations/0006_platform.sql` — coluna `platform` (0002–0005 já existem).
 - `src/lib/sparkline.ts` — função pura que converte valores em pontos de polyline SVG.
 - `src/lib/sparkline.test.ts` — testes.
 - `src/lib/risk-series.ts` — função pura que monta série diária de "contas em risco".
@@ -47,7 +47,7 @@
 ## Task 1: Migration da coluna `platform`
 
 **Files:**
-- Create: `supabase/migrations/0002_platform.sql`
+- Create: `supabase/migrations/0006_platform.sql` (0002–0005 já existem no diretório)
 - Modify: `src/app/actions.ts:286-297` (insert de `createAccount`)
 
 **Interfaces:**
@@ -57,7 +57,7 @@
 
 - [ ] **Step 1: Criar o arquivo de migration**
 
-Create `supabase/migrations/0002_platform.sql`:
+Create `supabase/migrations/0006_platform.sql`:
 
 ```sql
 -- Adiciona a plataforma de origem da conta de anúncio.
@@ -112,7 +112,7 @@ Expected: sem erros.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add supabase/migrations/0002_platform.sql src/app/actions.ts
+git add supabase/migrations/0006_platform.sql src/app/actions.ts
 git commit -m "feat: coluna platform em ad_accounts (default meta)"
 ```
 
