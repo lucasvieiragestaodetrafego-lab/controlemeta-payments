@@ -2,8 +2,8 @@ import { sparklinePoints } from "@/lib/sparkline";
 
 /**
  * Gráfico de "contas em risco ao longo do tempo". Área vermelha translúcida.
- * Mostra estado vazio amigável quando não há histórico suficiente (0 ou 1 ponto,
- * ou todos os pontos zerados).
+ * Mostra estado vazio amigável quando ainda não há histórico suficiente
+ * (menos de 2 pontos). Com 2+ pontos, uma linha reta em zero é resultado válido.
  */
 export default function RiskChart({
   series,
@@ -16,7 +16,7 @@ export default function RiskChart({
   const W = 640;
   const H = 80;
   const points = sparklinePoints(values, W, H);
-  const max = Math.max(1, ...values);
+  const peak = values.length ? Math.max(...values) : 0;
   const last = values[values.length - 1] ?? 0;
 
   return (
@@ -41,7 +41,7 @@ export default function RiskChart({
           Ainda coletando histórico. O gráfico aparece após alguns dias de checagens.
         </p>
       )}
-      <p className="mt-1 text-xs text-slate-500">Pico no período: {max === 1 && !hasSignal ? 0 : max}</p>
+      <p className="mt-1 text-xs text-slate-500">Pico no período: {peak}</p>
     </section>
   );
 }
