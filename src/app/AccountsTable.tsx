@@ -7,6 +7,8 @@ import AutomationToggle from "@/app/AutomationToggle";
 import DeleteAccountButton from "@/app/DeleteAccountButton";
 import ForceSendButton from "@/app/ForceSendButton";
 import { deleteAccounts } from "@/app/actions";
+import Sparkline from "@/app/Sparkline";
+import RiskChart from "@/app/RiskChart";
 
 export interface AccountRow {
   id: string;
@@ -20,6 +22,8 @@ export interface AccountRow {
   managerId: string | null;
   managerName: string;
   hasWhatsapp: boolean;
+  platform: string;
+  sparkValues: number[];
 }
 
 interface ManagerOption {
@@ -41,10 +45,12 @@ export default function AccountsTable({
   rows,
   isAdmin,
   managers,
+  riskSeries,
 }: {
   rows: AccountRow[];
   isAdmin: boolean;
   managers: ManagerOption[];
+  riskSeries: { date: string; count: number }[];
 }) {
   const [search, setSearch] = useState("");
   const [situacao, setSituacao] = useState("");
@@ -112,8 +118,30 @@ export default function AccountsTable({
     });
   }
 
+  function PlatformBadge({ platform }: { platform: string }) {
+    const meta = platform === "meta";
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs text-slate-300">
+        <span
+          className="h-2 w-2 rounded-full"
+          style={{ background: meta ? "#1877f2" : "#fbbc05" }}
+        />
+        {meta ? "Meta" : "Google"}
+      </span>
+    );
+  }
+
+  function sparkTone(values: number[]): "up" | "down" | "flat" {
+    if (values.length < 2) return "flat";
+    const diff = values[values.length - 1] - values[0];
+    if (diff > 0) return "up";
+    if (diff < 0) return "down";
+    return "flat";
+  }
+
   return (
     <div>
+      <RiskChart series={riskSeries} />
       <div className="mb-3 flex flex-wrap gap-2">
         <input
           type="search"
@@ -192,8 +220,10 @@ export default function AccountsTable({
                 </th>
               )}
               <th className="px-4 py-2 font-medium">Conta</th>
+              <th className="px-4 py-2 font-medium">Plataforma</th>
               {isAdmin && <th className="px-4 py-2 font-medium">Tipo</th>}
               <th className="px-4 py-2 font-medium">Saldo</th>
+              <th className="px-4 py-2 font-medium">Tendência</th>
               <th className="px-4 py-2 font-medium">Situação</th>
               {isAdmin && <th className="px-4 py-2 font-medium">Gestor</th>}
               {isAdmin && <th className="px-4 py-2 font-medium">Automação</th>}
@@ -204,7 +234,7 @@ export default function AccountsTable({
             {filtered.length === 0 && (
               <tr>
                 <td
-                  colSpan={isAdmin ? 8 : 3}
+                  colSpan={isAdmin ? 10 : 5}
                   className="px-4 py-6 text-center text-slate-500"
                 >
                   {rows.length === 0
@@ -236,12 +266,14 @@ export default function AccountsTable({
                     </td>
                   )}
                   <td className="px-4 py-3">{row.name}</td>
+                  <td className="px-4 py-3"><PlatformBadge platform={row.platform} /></td>
                   {isAdmin && (
                     <td className="px-4 py-3 text-slate-400">
                       {row.isPrepay === null ? "—" : row.isPrepay ? "pré-pago" : "cartão"}
                     </td>
                   )}
                   <td className="px-4 py-3">{balanceLabel}</td>
+                  <td className="px-4 py-3"><Sparkline values={row.sparkValues} tone={sparkTone(row.sparkValues)} /></td>
                   <td className="px-4 py-3">
                     <span
                       className={`inline-block rounded px-2 py-0.5 text-xs ${TONE_CLASSES[row.situacaoTone]}`}
