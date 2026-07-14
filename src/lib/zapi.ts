@@ -143,9 +143,15 @@ export function parseGroupChats(chats: unknown[]): WhatsAppGroup[] {
   return groups.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-/** Busca a lista de chats da instância e retorna só os grupos (nome + id). */
+/**
+ * Busca a lista de grupos da instância via /groups (endpoint dedicado a
+ * grupos, não /chats: /chats sem paginação só retorna as ~10 conversas mais
+ * recentes e mistura contatos individuais, o que deixava de fora grupos sem
+ * atividade recente, como o grupo padrão de alertas). pageSize=200 cobre
+ * folgadamente os ~126 grupos observados na instância em uso.
+ */
 export async function listWhatsAppGroups(): Promise<WhatsAppGroup[]> {
-  const chats = await get<unknown[]>("/chats");
+  const chats = await get<unknown[]>("/groups?page=1&pageSize=200");
   return parseGroupChats(chats);
 }
 
