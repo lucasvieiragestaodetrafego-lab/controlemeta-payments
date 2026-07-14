@@ -344,7 +344,7 @@ export default function AccountsTable({
               {isAdmin && <th className="whitespace-nowrap px-4 py-2 font-medium">Grupo disparo</th>}
               {isAdmin && <th className="whitespace-nowrap px-4 py-2 font-medium">Automação</th>}
               {isAdmin && (
-                <th className="w-[1%] whitespace-nowrap px-4 py-2 font-medium">Ações</th>
+                <th className="w-[1%] whitespace-nowrap px-4 py-2 text-center font-medium">Ações</th>
               )}
             </tr>
           </thead>
@@ -362,7 +362,7 @@ export default function AccountsTable({
               </tr>
             )}
             {groups.map((group) => (
-              <FragmentGroup key={group.clientName} clientName={group.clientName} colSpan={isAdmin ? 10 : 5}>
+              <FragmentGroup key={group.clientName} clientName={group.clientName} colSpan={isAdmin ? 11 : 5}>
                 {group.rows.map((row) => {
                   const balanceLabel =
                     row.balance === null
@@ -429,7 +429,7 @@ export default function AccountsTable({
                       )}
                       {isAdmin && (
                         <td className="w-[1%] whitespace-nowrap px-4 py-3">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center gap-2">
                             <button
                               type="button"
                               onClick={() => setEditing(row)}
