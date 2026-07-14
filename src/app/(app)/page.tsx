@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
@@ -6,6 +5,8 @@ import { runCheckNow } from "@/app/actions";
 import { getSituacao, type SituacaoTone } from "@/lib/account-status";
 import { buildRiskSeries } from "@/lib/risk-series";
 import AccountsTable, { type AccountRow } from "@/app/AccountsTable";
+import NewReportModal from "@/app/NewReportModal";
+import NovaAutomacaoSection from "@/app/(app)/settings/NovaAutomacaoSection";
 
 interface DashboardAccount {
   id: string;
@@ -162,6 +163,8 @@ export default async function DashboardPage() {
   const travadas = rows.filter((r) => r.travada).length;
   const automacaoLigada = rows.filter((r) => r.automationEnabled).length;
 
+  const defaultWhatsappGroupId = process.env.ZAPI_GROUP_IDS ?? "";
+
   return (
     <main className="mx-auto max-w-6xl p-6">
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -176,12 +179,12 @@ export default async function DashboardPage() {
                 Atualizar agora
               </button>
             </form>
-            <Link
-              href="/settings#nova-automacao"
-              className="rounded bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-500"
-            >
-              + Nova automação
-            </Link>
+            <NewReportModal>
+              <NovaAutomacaoSection
+                managers={managersList}
+                defaultWhatsappGroupId={defaultWhatsappGroupId}
+              />
+            </NewReportModal>
           </div>
         )}
       </header>
