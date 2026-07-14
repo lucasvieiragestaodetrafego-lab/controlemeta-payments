@@ -34,7 +34,6 @@ export default function NewAutomationForm({
     const selected = metaAccounts.find((a) => a.id === e.target.value);
     if (selected) {
       setName(selected.name);
-      setClientName(selected.name);
       setIsPrepay(selected.isPrepay ? "true" : "false");
     }
   }
@@ -105,6 +104,10 @@ export default function NewAutomationForm({
           placeholder="ex: Clínica Vida Nova"
           className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-slate-100"
         />
+        <p className="mt-1 text-xs text-slate-500">
+          Define o agrupamento na tabela de Relatórios. Use o mesmo nome de um cliente já
+          cadastrado para juntar esta conta às automações dele.
+        </p>
       </div>
 
       <div>
