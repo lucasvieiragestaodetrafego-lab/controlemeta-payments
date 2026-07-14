@@ -294,6 +294,7 @@ export async function createAccount(formData: FormData) {
     is_prepay: isPrepay,
     custom_message: customMessage,
     automation_enabled: automationEnabled,
+    platform: "meta",
   });
 
   if (accountError) throw new Error(`Erro ao criar conta: ${accountError.message}`);
