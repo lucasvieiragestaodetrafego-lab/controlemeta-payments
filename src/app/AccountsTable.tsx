@@ -6,6 +6,7 @@ import ManagerSelect from "@/app/ManagerSelect";
 import AutomationToggle from "@/app/AutomationToggle";
 import DeleteAccountButton from "@/app/DeleteAccountButton";
 import ForceSendButton from "@/app/ForceSendButton";
+import EditAccountModal from "@/app/EditAccountModal";
 import { deleteAccounts } from "@/app/actions";
 import Sparkline from "@/app/Sparkline";
 import RiskChart from "@/app/RiskChart";
@@ -24,6 +25,9 @@ export interface AccountRow {
   hasWhatsapp: boolean;
   platform: string;
   sparkValues: number[];
+  alertThreshold: number;
+  whatsappGroupId: string | null;
+  customMessage: string | null;
 }
 
 interface ManagerOption {
@@ -59,6 +63,7 @@ export default function AccountsTable({
   const [automacao, setAutomacao] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
+  const [editing, setEditing] = useState<AccountRow | null>(null);
 
   const situacaoOptions = useMemo(
     () => Array.from(new Set(rows.map((r) => r.situacaoLabel))).sort(),
@@ -298,6 +303,13 @@ export default function AccountsTable({
                   {isAdmin && (
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setEditing(row)}
+                          className="rounded bg-slate-700 px-2 py-1 text-xs font-medium text-white hover:bg-slate-600"
+                        >
+                          Editar
+                        </button>
                         <ForceSendButton
                           accountId={row.id}
                           accountName={row.name}
@@ -313,6 +325,10 @@ export default function AccountsTable({
           </tbody>
         </table>
       </div>
+
+      {editing && (
+        <EditAccountModal row={editing} open={!!editing} onClose={() => setEditing(null)} />
+      )}
     </div>
   );
 }

@@ -17,6 +17,7 @@ interface DashboardAccount {
   manager_id: string | null;
   whatsapp_group_id: string | null;
   platform: string;
+  custom_message: string | null;
 }
 
 interface LatestSnapshot {
@@ -57,7 +58,7 @@ export default async function DashboardPage() {
   let accountsQuery = admin
     .from("ad_accounts")
     .select(
-      "id, name, currency, is_prepay, alert_threshold, automation_enabled, manager_id, whatsapp_group_id, platform",
+      "id, name, currency, is_prepay, alert_threshold, automation_enabled, manager_id, whatsapp_group_id, platform, custom_message",
     )
     .eq("is_active", true)
     .order("name");
@@ -135,6 +136,9 @@ export default async function DashboardPage() {
       travada: situacao.travada,
       platform: account.platform,
       sparkValues: sparkByAccount.get(account.id) ?? [],
+      alertThreshold: account.alert_threshold,
+      whatsappGroupId: account.whatsapp_group_id,
+      customMessage: account.custom_message,
     };
   });
 
