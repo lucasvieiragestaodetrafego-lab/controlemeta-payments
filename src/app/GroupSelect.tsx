@@ -23,7 +23,7 @@ export default function GroupSelect({
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<WhatsAppGroup | null>(
-    defaultGroupId ? { id: defaultGroupId, name: defaultGroupName || defaultGroupId } : null,
+    defaultGroupId ? { id: defaultGroupId, name: defaultGroupName ?? "" } : null,
   );
 
   useEffect(() => {
@@ -54,7 +54,7 @@ export default function GroupSelect({
         onClick={() => setOpen((o) => !o)}
         className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-left text-sm text-slate-100"
       >
-        {selected ? selected.name : "Clique aqui para selecionar"}
+        {selected ? selected.name || selected.id : "Clique aqui para selecionar"}
       </button>
       {open && (
         <div className="absolute z-10 mt-1 w-full rounded border border-slate-700 bg-slate-900 shadow-lg">

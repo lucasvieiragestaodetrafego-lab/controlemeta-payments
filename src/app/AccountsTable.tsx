@@ -212,8 +212,8 @@ export default function AccountsTable({
                   </div>
                   <p className="text-lg font-semibold text-slate-100">{balanceLabel}</p>
                   <p className="text-xs text-slate-400">{row.name}</p>
-                  {row.whatsappGroupName && (
-                    <p className="text-xs text-slate-500">📱 {row.whatsappGroupName}</p>
+                  {(row.whatsappGroupName || row.whatsappGroupId) && (
+                    <p className="text-xs text-slate-500">📱 {row.whatsappGroupName || row.whatsappGroupId}</p>
                   )}
                   <div className="my-2">
                     <Sparkline values={row.sparkValues} tone={sparkTone(row.sparkValues)} width={200} height={28} />
@@ -384,8 +384,8 @@ export default function AccountsTable({
                       )}
                       <td className="px-4 py-3">
                         {row.name}
-                        {row.whatsappGroupName && (
-                          <p className="text-xs text-slate-500">📱 {row.whatsappGroupName}</p>
+                        {(row.whatsappGroupName || row.whatsappGroupId) && (
+                          <p className="text-xs text-slate-500">📱 {row.whatsappGroupName || row.whatsappGroupId}</p>
                         )}
                       </td>
                       <td className="px-4 py-3"><PlatformBadge platform={row.platform} /></td>

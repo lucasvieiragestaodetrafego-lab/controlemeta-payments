@@ -71,16 +71,22 @@ export default async function DashboardPage() {
     accountsQuery = accountsQuery.eq("manager_id", manager.id);
   }
 
-  const { data: accountsData } = await accountsQuery;
+  const { data: accountsData, error: accountsError } = await accountsQuery;
+  if (accountsError) {
+    console.error("Erro ao buscar contas:", accountsError.message);
+  }
   const accounts = (accountsData ?? []) as unknown as DashboardAccount[];
 
   const accountIds = accounts.map((a) => a.id);
-  const { data: snapshotsData } = accountIds.length
+  const { data: snapshotsData, error: snapshotsError } = accountIds.length
     ? await admin
         .from("latest_balance_snapshots")
         .select("ad_account_id, balance, account_status, checked_at")
         .in("ad_account_id", accountIds)
-    : { data: [] as LatestSnapshot[] };
+    : { data: [] as LatestSnapshot[], error: null };
+  if (snapshotsError) {
+    console.error("Erro ao buscar snapshots:", snapshotsError.message);
+  }
 
   const snapshots = new Map(
     (snapshotsData ?? []).map((s) => [s.ad_account_id, s as LatestSnapshot]),
@@ -88,14 +94,17 @@ export default async function DashboardPage() {
 
   const since = new Date();
   since.setDate(since.getDate() - 14);
-  const { data: historyData } = accountIds.length
+  const { data: historyData, error: historyError } = accountIds.length
     ? await admin
         .from("balance_snapshots")
         .select("ad_account_id, balance, account_status, checked_at")
         .in("ad_account_id", accountIds)
         .gte("checked_at", since.toISOString())
         .order("checked_at", { ascending: true })
-    : { data: [] };
+    : { data: [], error: null };
+  if (historyError) {
+    console.error("Erro ao buscar histórico:", historyError.message);
+  }
 
   const history = (historyData ?? []) as {
     ad_account_id: string;
