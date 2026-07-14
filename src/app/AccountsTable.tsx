@@ -184,49 +184,83 @@ export default function AccountsTable({
   }
 
   const cardsView = (
-    <div className="space-y-5">
-      {groups.map((group) => (
-        <div key={group.clientName}>
-          <h3 className="mb-3 border-l-4 border-sky-500 bg-gradient-to-r from-slate-800/80 to-slate-800/20 px-3 py-2 text-sm font-semibold tracking-wide text-slate-200">
-            {group.clientName}
-          </h3>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {group.rows.map((row) => {
-              const balanceLabel =
-                row.balance === null
-                  ? "—"
-                  : row.balance.toLocaleString("pt-BR", { style: "currency", currency: row.currency });
-              return (
-                <div key={row.id} className="rounded-lg border border-slate-800 bg-slate-900 p-4">
-                  <div className="mb-2 flex items-start justify-between">
-                    <PlatformBadge platform={row.platform} />
-                    {isAdmin && (
-                      <button
-                        type="button"
-                        onClick={() => setEditing(row)}
-                        className="text-xs text-sky-400 hover:text-sky-300"
-                      >
-                        Editar
-                      </button>
-                    )}
-                  </div>
-                  <p className="text-lg font-semibold text-slate-100">{balanceLabel}</p>
-                  <p className="text-xs text-slate-400">{row.name}</p>
-                  {(row.whatsappGroupName || row.whatsappGroupId) && (
-                    <p className="text-xs text-slate-500">📱 {row.whatsappGroupName || row.whatsappGroupId}</p>
-                  )}
-                  <div className="my-2">
-                    <Sparkline values={row.sparkValues} tone={sparkTone(row.sparkValues)} width={200} height={28} />
-                  </div>
-                  <span className={`inline-block rounded px-2 py-0.5 text-xs ${TONE_CLASSES[row.situacaoTone]}`}>
-                    {row.situacaoLabel}
-                  </span>
+    <div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {filtered.map((row) => {
+          const balanceLabel =
+            row.balance === null
+              ? "—"
+              : row.balance.toLocaleString("pt-BR", { style: "currency", currency: row.currency });
+          return (
+            <div key={row.id} className="rounded-lg border border-slate-800 bg-slate-900 p-4">
+              <div className="mb-2 flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    {row.clientName}
+                  </p>
+                  <p className="truncate text-sm text-slate-200">{row.name}</p>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      ))}
+                <PlatformBadge platform={row.platform} />
+              </div>
+
+              <p className="text-lg font-semibold text-slate-100">{balanceLabel}</p>
+              {(row.whatsappGroupName || row.whatsappGroupId) && (
+                <p className="truncate text-xs text-slate-500">
+                  📱 {row.whatsappGroupName || row.whatsappGroupId}
+                </p>
+              )}
+              <div className="my-2">
+                <Sparkline values={row.sparkValues} tone={sparkTone(row.sparkValues)} width={200} height={28} />
+              </div>
+              <span className={`inline-block rounded px-2 py-0.5 text-xs ${TONE_CLASSES[row.situacaoTone]}`}>
+                {row.situacaoLabel}
+              </span>
+
+              {isAdmin && (
+                <div className="mt-3 space-y-2 border-t border-slate-800 pt-3 text-xs">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-slate-500">Tipo</span>
+                    <span className="text-slate-300">
+                      {row.isPrepay === null ? "—" : row.isPrepay ? "pré-pago" : "cartão"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="shrink-0 text-slate-500">Gestor</span>
+                    <ManagerSelect accountId={row.id} currentManagerId={row.managerId} managers={managers} />
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-slate-500">Automação</span>
+                    <AutomationToggle accountId={row.id} enabled={row.automationEnabled} />
+                  </div>
+                  <div className="flex items-center justify-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setEditing(row)}
+                      className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-700"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-3.5 w-3.5"
+                      >
+                        <path d="M12 20h9" />
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                      </svg>
+                      Editar
+                    </button>
+                    <ForceSendButton accountId={row.id} accountName={row.name} hasWhatsapp={row.hasWhatsapp} />
+                    <DeleteAccountButton accountId={row.id} accountName={row.name} />
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
       {filtered.length === 0 && (
         <p className="py-6 text-center text-sm text-slate-500">
           Nenhuma conta encontrada para esses filtros.
