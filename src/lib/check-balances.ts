@@ -20,7 +20,7 @@ const ACCOUNT_STATUS_LABELS: Record<number, string> = {
 };
 
 /** Não reenvia o mesmo tipo de alerta para a mesma conta dentro desta janela (checagem automática). */
-const ALERT_COOLDOWN_HOURS = 24;
+const ALERT_COOLDOWN_HOURS = 6;
 
 type TemplateKey = "saldo" | "pagamento" | "desativada";
 type AlertType = "low_balance" | "account_disabled" | "payment_error";
