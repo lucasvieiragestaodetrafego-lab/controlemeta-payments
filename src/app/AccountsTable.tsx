@@ -211,7 +211,9 @@ export default function AccountsTable({
                     )}
                   </div>
                   <p className="text-lg font-semibold text-slate-100">{balanceLabel}</p>
-                  <p className="text-xs text-slate-400">{row.name}</p>
+                  {row.name !== group.clientName && (
+                    <p className="text-xs text-slate-400">{row.name}</p>
+                  )}
                   {(row.whatsappGroupName || row.whatsappGroupId) && (
                     <p className="text-xs text-slate-500">📱 {row.whatsappGroupName || row.whatsappGroupId}</p>
                   )}
@@ -383,7 +385,7 @@ export default function AccountsTable({
                         </td>
                       )}
                       <td className="px-4 py-3">
-                        {row.name}
+                        {row.name !== group.clientName && row.name}
                         {(row.whatsappGroupName || row.whatsappGroupId) && (
                           <p className="text-xs text-slate-500">📱 {row.whatsappGroupName || row.whatsappGroupId}</p>
                         )}
