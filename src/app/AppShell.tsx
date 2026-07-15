@@ -37,7 +37,7 @@ export default function AppShell({
 
   return (
     <div className="flex min-h-screen">
-      <NetworkBackground particleCount={30} intensity={0.4} />
+      <NetworkBackground particleCount={40} intensity={0.65} />
       <aside
         className={`relative z-10 flex flex-col border-r border-slate-800 bg-slate-900/85 backdrop-blur-sm transition-all duration-200 ${
           open ? "w-56" : "w-14"
