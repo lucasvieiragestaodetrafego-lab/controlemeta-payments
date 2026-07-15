@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logout } from "@/app/login/actions";
+import NetworkBackground from "@/app/NetworkBackground";
 
 interface NavItem {
   href: string;
@@ -36,8 +37,9 @@ export default function AppShell({
 
   return (
     <div className="flex min-h-screen">
+      <NetworkBackground particleCount={30} intensity={0.4} />
       <aside
-        className={`flex flex-col border-r border-slate-800 bg-slate-900 transition-all duration-200 ${
+        className={`relative z-10 flex flex-col border-r border-slate-800 bg-slate-900/85 backdrop-blur-sm transition-all duration-200 ${
           open ? "w-56" : "w-14"
         }`}
       >
@@ -114,7 +116,7 @@ export default function AppShell({
         </div>
       </aside>
 
-      <div className="flex-1 overflow-x-auto">{children}</div>
+      <div className="relative z-10 flex-1 overflow-x-auto">{children}</div>
     </div>
   );
 }
