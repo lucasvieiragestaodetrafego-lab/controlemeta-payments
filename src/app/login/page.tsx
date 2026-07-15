@@ -1,4 +1,5 @@
 import { login } from "./actions";
+import NetworkBackground from "@/app/NetworkBackground";
 
 export default async function LoginPage({
   searchParams,
@@ -8,10 +9,11 @@ export default async function LoginPage({
   const { error } = await searchParams;
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-4">
+      <NetworkBackground />
       <form
         action={login}
-        className="w-full max-w-sm space-y-4 rounded-lg border border-slate-800 bg-slate-900 p-6"
+        className="relative z-10 w-full max-w-sm space-y-4 rounded-lg border border-slate-800 bg-slate-900/90 p-6 backdrop-blur-sm"
       >
         <div>
           <h1 className="text-lg font-semibold">Meta Payments</h1>
