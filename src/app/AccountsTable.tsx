@@ -217,47 +217,45 @@ export default function AccountsTable({
                 {row.situacaoLabel}
               </span>
 
-              {isAdmin && (
-                <div className="mt-3 space-y-2 border-t border-slate-800 pt-3 text-xs">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-slate-500">Tipo</span>
-                    <span className="text-slate-300">
-                      {row.isPrepay === null ? "—" : row.isPrepay ? "pré-pago" : "cartão"}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="shrink-0 text-slate-500">Gestor</span>
-                    <ManagerSelect accountId={row.id} currentManagerId={row.managerId} managers={managers} />
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-slate-500">Automação</span>
-                    <AutomationToggle accountId={row.id} enabled={row.automationEnabled} />
-                  </div>
-                  <div className="flex items-center justify-center gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => setEditing(row)}
-                      className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-700"
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="h-3.5 w-3.5"
-                      >
-                        <path d="M12 20h9" />
-                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                      </svg>
-                      Editar
-                    </button>
-                    <ForceSendButton accountId={row.id} accountName={row.name} hasWhatsapp={row.hasWhatsapp} />
-                    <DeleteAccountButton accountId={row.id} accountName={row.name} />
-                  </div>
+              <div className="mt-3 space-y-2 border-t border-slate-800 pt-3 text-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-slate-500">Tipo</span>
+                  <span className="text-slate-300">
+                    {row.isPrepay === null ? "—" : row.isPrepay ? "pré-pago" : "cartão"}
+                  </span>
                 </div>
-              )}
+                <div className="flex items-center justify-between gap-2">
+                  <span className="shrink-0 text-slate-500">Gestor</span>
+                  <ManagerSelect accountId={row.id} currentManagerId={row.managerId} managers={managers} />
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-slate-500">Automação</span>
+                  <AutomationToggle accountId={row.id} enabled={row.automationEnabled} />
+                </div>
+                <div className="flex items-center justify-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setEditing(row)}
+                    className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-700"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-3.5 w-3.5"
+                    >
+                      <path d="M12 20h9" />
+                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                    </svg>
+                    Editar
+                  </button>
+                  <ForceSendButton accountId={row.id} accountName={row.name} hasWhatsapp={row.hasWhatsapp} />
+                  {isAdmin && <DeleteAccountButton accountId={row.id} accountName={row.name} />}
+                </div>
+              </div>
             </div>
           );
         })}
@@ -308,34 +306,28 @@ export default function AccountsTable({
             </option>
           ))}
         </select>
-        {isAdmin && (
-          <select value={tipo} onChange={(e) => setTipo(e.target.value)} className={selectClass}>
-            <option value="">Tipo: todos</option>
-            <option value="prepago">Pré-pago</option>
-            <option value="cartao">Cartão</option>
-          </select>
-        )}
-        {isAdmin && (
-          <select value={gestor} onChange={(e) => setGestor(e.target.value)} className={selectClass}>
-            <option value="">Gestor: todos</option>
-            {gestorOptions.map((g) => (
-              <option key={g} value={g}>
-                {g}
-              </option>
-            ))}
-          </select>
-        )}
-        {isAdmin && (
-          <select
-            value={automacao}
-            onChange={(e) => setAutomacao(e.target.value)}
-            className={selectClass}
-          >
-            <option value="">Automação: todas</option>
-            <option value="ligada">Ligada</option>
-            <option value="desligada">Desligada</option>
-          </select>
-        )}
+        <select value={tipo} onChange={(e) => setTipo(e.target.value)} className={selectClass}>
+          <option value="">Tipo: todos</option>
+          <option value="prepago">Pré-pago</option>
+          <option value="cartao">Cartão</option>
+        </select>
+        <select value={gestor} onChange={(e) => setGestor(e.target.value)} className={selectClass}>
+          <option value="">Gestor: todos</option>
+          {gestorOptions.map((g) => (
+            <option key={g} value={g}>
+              {g}
+            </option>
+          ))}
+        </select>
+        <select
+          value={automacao}
+          onChange={(e) => setAutomacao(e.target.value)}
+          className={selectClass}
+        >
+          <option value="">Automação: todas</option>
+          <option value="ligada">Ligada</option>
+          <option value="desligada">Desligada</option>
+        </select>
       </div>
 
       <div className="mb-2 flex items-center justify-between">
@@ -372,23 +364,21 @@ export default function AccountsTable({
               )}
               <th className="px-4 py-2 font-medium">Conta</th>
               <th className="px-4 py-2 font-medium">Plataforma</th>
-              {isAdmin && <th className="px-4 py-2 font-medium">Tipo</th>}
+              <th className="px-4 py-2 font-medium">Tipo</th>
               <th className="px-4 py-2 font-medium">Saldo</th>
               <th className="px-4 py-2 font-medium">Tendência</th>
               <th className="px-4 py-2 font-medium">Situação</th>
-              {isAdmin && <th className="whitespace-nowrap px-4 py-2 font-medium">Gestor</th>}
-              {isAdmin && <th className="whitespace-nowrap px-4 py-2 font-medium">Grupo disparo</th>}
-              {isAdmin && <th className="whitespace-nowrap px-4 py-2 font-medium">Automação</th>}
-              {isAdmin && (
-                <th className="w-[1%] whitespace-nowrap px-4 py-2 text-center font-medium">Ações</th>
-              )}
+              <th className="whitespace-nowrap px-4 py-2 font-medium">Gestor</th>
+              <th className="whitespace-nowrap px-4 py-2 font-medium">Grupo disparo</th>
+              <th className="whitespace-nowrap px-4 py-2 font-medium">Automação</th>
+              <th className="w-[1%] whitespace-nowrap px-4 py-2 text-center font-medium">Ações</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 && (
               <tr>
                 <td
-                  colSpan={isAdmin ? 11 : 5}
+                  colSpan={isAdmin ? 11 : 10}
                   className="px-4 py-6 text-center text-slate-500"
                 >
                   {rows.length === 0
@@ -398,7 +388,7 @@ export default function AccountsTable({
               </tr>
             )}
             {groups.map((group) => (
-              <FragmentGroup key={group.clientName} clientName={group.clientName} colSpan={isAdmin ? 11 : 5}>
+              <FragmentGroup key={group.clientName} clientName={group.clientName} colSpan={isAdmin ? 11 : 10}>
                 {group.rows.map((row) => {
                   const balanceLabel =
                     row.balance === null
@@ -423,11 +413,9 @@ export default function AccountsTable({
                       )}
                       <td className="px-4 py-3">{row.name}</td>
                       <td className="px-4 py-3"><PlatformBadge platform={row.platform} /></td>
-                      {isAdmin && (
-                        <td className="px-4 py-3 text-slate-400">
-                          {row.isPrepay === null ? "—" : row.isPrepay ? "pré-pago" : "cartão"}
-                        </td>
-                      )}
+                      <td className="px-4 py-3 text-slate-400">
+                        {row.isPrepay === null ? "—" : row.isPrepay ? "pré-pago" : "cartão"}
+                      </td>
                       <td className="px-4 py-3">{balanceLabel}</td>
                       <td className="px-4 py-3"><Sparkline values={row.sparkValues} tone={sparkTone(row.sparkValues)} /></td>
                       <td className="px-4 py-3">
@@ -437,63 +425,57 @@ export default function AccountsTable({
                           {row.situacaoLabel}
                         </span>
                       </td>
-                      {isAdmin && (
-                        <td className="whitespace-nowrap px-4 py-3">
-                          <ManagerSelect
-                            accountId={row.id}
-                            currentManagerId={row.managerId}
-                            managers={managers}
-                          />
-                        </td>
-                      )}
-                      {isAdmin && (
-                        <td
-                          className="whitespace-nowrap px-4 py-3 text-slate-400"
-                          title={row.whatsappGroupName || row.whatsappGroupId || undefined}
-                        >
-                          {row.whatsappGroupName || row.whatsappGroupId ? (
-                            <>📱 {row.whatsappGroupName || row.whatsappGroupId}</>
-                          ) : (
-                            "—"
-                          )}
-                        </td>
-                      )}
-                      {isAdmin && (
-                        <td className="whitespace-nowrap px-4 py-3">
-                          <AutomationToggle accountId={row.id} enabled={row.automationEnabled} />
-                        </td>
-                      )}
-                      {isAdmin && (
-                        <td className="w-[1%] whitespace-nowrap px-4 py-3">
-                          <div className="flex items-center justify-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => setEditing(row)}
-                              className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-700"
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <ManagerSelect
+                          accountId={row.id}
+                          currentManagerId={row.managerId}
+                          managers={managers}
+                        />
+                      </td>
+                      <td
+                        className="whitespace-nowrap px-4 py-3 text-slate-400"
+                        title={row.whatsappGroupName || row.whatsappGroupId || undefined}
+                      >
+                        {row.whatsappGroupName || row.whatsappGroupId ? (
+                          <>📱 {row.whatsappGroupName || row.whatsappGroupId}</>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <AutomationToggle accountId={row.id} enabled={row.automationEnabled} />
+                      </td>
+                      <td className="w-[1%] whitespace-nowrap px-4 py-3">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setEditing(row)}
+                            className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-700"
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="h-3.5 w-3.5"
                             >
-                              <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="h-3.5 w-3.5"
-                              >
-                                <path d="M12 20h9" />
-                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                              </svg>
-                              Editar
-                            </button>
-                            <ForceSendButton
-                              accountId={row.id}
-                              accountName={row.name}
-                              hasWhatsapp={row.hasWhatsapp}
-                            />
+                              <path d="M12 20h9" />
+                              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                            </svg>
+                            Editar
+                          </button>
+                          <ForceSendButton
+                            accountId={row.id}
+                            accountName={row.name}
+                            hasWhatsapp={row.hasWhatsapp}
+                          />
+                          {isAdmin && (
                             <DeleteAccountButton accountId={row.id} accountName={row.name} />
-                          </div>
-                        </td>
-                      )}
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}

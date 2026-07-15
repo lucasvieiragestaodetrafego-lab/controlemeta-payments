@@ -29,11 +29,35 @@ async function requireAdmin() {
 }
 
 /**
+ * Exige apenas login (qualquer papel, admin ou usuário básico). Usada nas
+ * ações de criar/editar relatórios, disparar alerta e trocar gestor —
+ * excluir contas e gerenciar usuários continuam exigindo requireAdmin().
+ */
+async function requireAuth() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Não autenticado.");
+
+  const admin = getSupabaseAdmin();
+  const { data: manager } = await admin
+    .from("managers")
+    .select("id, role, auth_user_id")
+    .eq("auth_user_id", user.id)
+    .single();
+
+  if (!manager) throw new Error("Seu login não está vinculado a nenhum gestor.");
+
+  return manager;
+}
+
+/**
  * Dispara o alerta de UMA conta na hora, ignorando automação, limite e
  * cooldown. Usado pelo botão "Disparar" na coluna de ações do painel.
  */
 export async function forceSendAlertAction(accountId: string) {
-  await requireAdmin();
+  await requireAuth();
   const result = await forceSendAlert(accountId);
   revalidatePath("/");
   return result;
@@ -41,7 +65,7 @@ export async function forceSendAlertAction(accountId: string) {
 
 /** Dispara a checagem de saldo na hora, fora do horário automático. */
 export async function runCheckNow() {
-  await requireAdmin();
+  await requireAuth();
   await checkAllBalances();
   revalidatePath("/");
   revalidatePath("/settings");
@@ -49,7 +73,7 @@ export async function runCheckNow() {
 
 /** Troca o gestor responsável por uma conta (usado no dashboard editável). */
 export async function updateAccountManager(accountId: string, managerId: string) {
-  await requireAdmin();
+  await requireAuth();
 
   const admin = getSupabaseAdmin();
   const { error } = await admin
@@ -65,7 +89,7 @@ export async function updateAccountManager(accountId: string, managerId: string)
 
 /** Liga/desliga o envio automático de alertas de uma conta (dashboard). */
 export async function setAutomation(accountId: string, enabled: boolean) {
-  await requireAdmin();
+  await requireAuth();
 
   const admin = getSupabaseAdmin();
   const { error } = await admin
@@ -198,7 +222,7 @@ export async function deleteManager(managerId: string) {
 
 /** Salva o texto de uma mensagem de alerta (template). */
 export async function updateTemplate(formData: FormData) {
-  await requireAdmin();
+  await requireAuth();
 
   const key = formData.get("key") as string;
   const template = (formData.get("template") as string) ?? "";
@@ -216,13 +240,13 @@ export async function updateTemplate(formData: FormData) {
 
 /** Lista os grupos do WhatsApp disponíveis, para o seletor nos modais de relatório. */
 export async function listWhatsAppGroupsAction(): Promise<WhatsAppGroup[]> {
-  await requireAdmin();
+  await requireAuth();
   return listWhatsAppGroupsCached();
 }
 
 /** Salva as edições de uma conta feitas na tela de Configurações. */
 export async function updateAccount(formData: FormData) {
-  await requireAdmin();
+  await requireAuth();
 
   const id = formData.get("id") as string;
   const clientId = formData.get("client_id") as string;
@@ -266,7 +290,7 @@ export async function updateAccount(formData: FormData) {
 
 /** Cadastra uma nova conta de anúncio, criando o cliente se ainda não existir. */
 export async function createAccount(formData: FormData) {
-  await requireAdmin();
+  await requireAuth();
 
   const name = (formData.get("name") as string).trim();
   const metaAccountId = (formData.get("meta_account_id") as string).trim();

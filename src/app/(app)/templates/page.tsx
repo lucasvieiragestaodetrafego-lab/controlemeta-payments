@@ -24,7 +24,7 @@ export default async function TemplatesPage() {
     .eq("auth_user_id", user.id)
     .single();
 
-  if (!manager || manager.role !== "admin") {
+  if (!manager) {
     redirect("/");
   }
 

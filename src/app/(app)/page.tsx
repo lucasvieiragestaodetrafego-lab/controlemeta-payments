@@ -188,33 +188,29 @@ export default async function DashboardPage() {
           <h1 className="text-xl font-semibold">Alertas de saldo</h1>
           <p className="text-sm text-slate-400">Olá, {manager.name}.</p>
         </div>
-        {isAdmin && (
-          <div className="flex items-center gap-3">
-            <form action={runCheckNow}>
-              <button className="rounded bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-500">
-                Atualizar agora
-              </button>
-            </form>
-            <NewReportModal>
-              <Suspense fallback={<p className="text-sm text-slate-500">Carregando contas do Meta…</p>}>
-                <NovaAutomacaoSection
-                  managers={managersList}
-                  defaultWhatsappGroupId={defaultWhatsappGroupId}
-                />
-              </Suspense>
-            </NewReportModal>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          <form action={runCheckNow}>
+            <button className="rounded bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-500">
+              Atualizar agora
+            </button>
+          </form>
+          <NewReportModal>
+            <Suspense fallback={<p className="text-sm text-slate-500">Carregando contas do Meta…</p>}>
+              <NovaAutomacaoSection
+                managers={managersList}
+                defaultWhatsappGroupId={defaultWhatsappGroupId}
+              />
+            </Suspense>
+          </NewReportModal>
+        </div>
       </header>
 
-      {isAdmin && (
-        <section className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <SummaryCard label="Total de contas" value={total} tone="muted" />
-          <SummaryCard label="Ativas" value={ativas} tone="green" />
-          <SummaryCard label="Travadas / problema" value={travadas} tone="red" />
-          <SummaryCard label="Automação ligada" value={automacaoLigada} tone="green" />
-        </section>
-      )}
+      <section className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <SummaryCard label="Total de contas" value={total} tone="muted" />
+        <SummaryCard label="Ativas" value={ativas} tone="green" />
+        <SummaryCard label="Travadas / problema" value={travadas} tone="red" />
+        <SummaryCard label="Automação ligada" value={automacaoLigada} tone="green" />
+      </section>
 
       <AccountsTable rows={rows} isAdmin={isAdmin} managers={managersList} riskSeries={riskSeries} />
     </main>
