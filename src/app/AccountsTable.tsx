@@ -10,6 +10,7 @@ import EditAccountModal from "@/app/EditAccountModal";
 import { deleteAccounts } from "@/app/actions";
 import Sparkline from "@/app/Sparkline";
 import RiskChart from "@/app/RiskChart";
+import MotivationalQuote from "@/app/MotivationalQuote";
 import { groupAccountsByClient } from "@/lib/group-accounts";
 
 export interface AccountRow {
@@ -272,6 +273,7 @@ export default function AccountsTable({
   return (
     <div>
       <RiskChart series={riskSeries} />
+      <MotivationalQuote />
       <div className="mb-3 flex justify-end">
         <div className="inline-flex overflow-hidden rounded border border-slate-700 text-xs">
           <button
