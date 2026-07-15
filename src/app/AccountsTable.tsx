@@ -353,7 +353,7 @@ export default function AccountsTable({
       </div>
 
       {view === "table" ? (
-        <div className="overflow-x-auto rounded-lg border border-slate-800">
+        <div className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-950">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-900 text-slate-400">
             <tr>

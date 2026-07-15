@@ -14,8 +14,18 @@ interface Particle {
  * Cobre a viewport inteira, atrás do conteúdo (z-index 0) — quem usa este
  * componente deve posicionar o conteúdo da página com z-index >= 1.
  * Respeita prefers-reduced-motion (não anima, fica só com os pontos parados).
+ *
+ * `intensity` (0 a 1) escala a opacidade dos pontos/linhas — usado pra ter
+ * uma versão mais discreta no painel (atrás de tabelas/dados) e uma mais
+ * marcante na tela de login (sem dado nenhum pra atrapalhar).
  */
-export default function NetworkBackground({ particleCount = 55 }: { particleCount?: number }) {
+export default function NetworkBackground({
+  particleCount = 55,
+  intensity = 1,
+}: {
+  particleCount?: number;
+  intensity?: number;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -63,7 +73,7 @@ export default function NetworkBackground({ particleCount = 55 }: { particleCoun
           const dy = particles[i].y - particles[j].y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < LINK_DISTANCE) {
-            ctx.strokeStyle = `rgba(56,189,248,${0.16 * (1 - dist / LINK_DISTANCE)})`;
+            ctx.strokeStyle = `rgba(56,189,248,${0.16 * intensity * (1 - dist / LINK_DISTANCE)})`;
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
@@ -76,7 +86,7 @@ export default function NetworkBackground({ particleCount = 55 }: { particleCoun
       for (const p of particles) {
         ctx.beginPath();
         ctx.arc(p.x, p.y, 1.6, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(125,211,252,0.9)";
+        ctx.fillStyle = `rgba(125,211,252,${0.9 * intensity})`;
         ctx.fill();
       }
 
@@ -88,7 +98,7 @@ export default function NetworkBackground({ particleCount = 55 }: { particleCoun
       window.removeEventListener("resize", resize);
       if (frameId) cancelAnimationFrame(frameId);
     };
-  }, [particleCount]);
+  }, [particleCount, intensity]);
 
   return (
     <canvas
