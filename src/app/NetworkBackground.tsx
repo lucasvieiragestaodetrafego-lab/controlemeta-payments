@@ -73,7 +73,7 @@ export default function NetworkBackground({
           const dy = particles[i].y - particles[j].y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < LINK_DISTANCE) {
-            ctx.strokeStyle = `rgba(56,189,248,${0.16 * intensity * (1 - dist / LINK_DISTANCE)})`;
+            ctx.strokeStyle = `rgba(56,189,248,${0.22 * intensity * (1 - dist / LINK_DISTANCE)})`;
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
@@ -85,9 +85,12 @@ export default function NetworkBackground({
 
       for (const p of particles) {
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 1.6, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(125,211,252,${0.9 * intensity})`;
+        ctx.arc(p.x, p.y, 2.6, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(125,211,252,${0.95 * intensity})`;
+        ctx.shadowColor = "rgba(56,189,248,0.9)";
+        ctx.shadowBlur = 6;
         ctx.fill();
+        ctx.shadowBlur = 0;
       }
 
       if (!reduceMotion) frameId = requestAnimationFrame(draw);
