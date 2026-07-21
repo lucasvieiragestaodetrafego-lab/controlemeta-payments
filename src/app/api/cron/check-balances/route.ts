@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { checkAllBalances } from "@/lib/check-balances";
+import { sendScheduledReports } from "@/lib/check-reports";
 
 export const maxDuration = 60;
 
@@ -16,6 +17,7 @@ export async function GET(request: Request) {
 
   try {
     const results = await checkAllBalances();
+    await sendScheduledReports();
     return NextResponse.json({ ok: true, checked: results.length, results });
   } catch (err) {
     return NextResponse.json(
