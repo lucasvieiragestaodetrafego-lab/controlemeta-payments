@@ -1,5 +1,5 @@
 // src/lib/meta-insights.ts
-import { getConfig, graphGetAll } from "./meta";
+import { getConfig, graphGet, graphGetAll } from "./meta";
 import {
   sumActionValue,
   computeRoas,
@@ -136,6 +136,38 @@ export async function getAccountInsights(
   };
 }
 
+interface AdCreativeFields {
+  creative?: {
+    instagram_permalink_url?: string;
+    effective_object_story_id?: string;
+  };
+}
+
+/**
+ * Busca o link do post (Instagram ou Facebook) de um anúncio. Não vem no
+ * endpoint /insights — é uma chamada à parte, feita só para os anúncios que
+ * entram no ranking (no máximo 5), nunca para a lista inteira de anúncios.
+ * Retorna null (sem quebrar o envio) se o anúncio não tiver post vinculado
+ * ou a chamada falhar.
+ */
+async function getAdPermalink(adId: string): Promise<string | null> {
+  try {
+    const data = await graphGet<AdCreativeFields>(`/${adId}`, {
+      fields: "creative{instagram_permalink_url,effective_object_story_id}",
+    });
+    const creative = data.creative;
+    if (!creative) return null;
+    if (creative.instagram_permalink_url) return creative.instagram_permalink_url;
+    if (creative.effective_object_story_id) {
+      const [pageId, postId] = creative.effective_object_story_id.split("_");
+      if (pageId && postId) return `https://www.facebook.com/${pageId}/posts/${postId}`;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 /** Busca o ranking dos criativos com melhor desempenho no período. */
 export async function getTopCreatives(
   adAccountId: string,
@@ -151,8 +183,6 @@ export async function getTopCreatives(
     return {
       adId: row.ad_id ?? "",
       adName: row.ad_name ?? "—",
-      // Link do post não é um campo do endpoint /insights — buscar o
-      // permalink exigiria uma chamada extra por anúncio (fora de escopo por ora).
       permalink: null,
       conversions,
       clicks,
@@ -161,5 +191,9 @@ export async function getTopCreatives(
     };
   });
 
-  return rankCreatives(creatives, limit);
+  const ranked = rankCreatives(creatives, limit);
+
+  return Promise.all(
+    ranked.map(async (c) => ({ ...c, permalink: await getAdPermalink(c.adId) })),
+  );
 }

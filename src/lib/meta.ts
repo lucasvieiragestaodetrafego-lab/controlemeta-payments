@@ -57,7 +57,7 @@ export function getConfig() {
   return { token, businessId, version };
 }
 
-async function graphGet<T>(path: string, params: Record<string, string>): Promise<T> {
+export async function graphGet<T>(path: string, params: Record<string, string>): Promise<T> {
   const { token, version } = getConfig();
   const url = new URL(`${GRAPH_BASE}/${version}${path}`);
   for (const [key, value] of Object.entries(params)) {
