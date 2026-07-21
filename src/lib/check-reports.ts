@@ -28,6 +28,13 @@ export function renderReportMessage(template: string, vars: Record<string, strin
 const currencyFmt = (v: number, currency: string) =>
   v.toLocaleString("pt-BR", { style: "currency", currency });
 
+const PERIOD_LABEL: Record<ReportPeriod, string> = {
+  today: "Hoje",
+  last_7_days: "Últimos 7 dias",
+  last_30_days: "Últimos 30 dias",
+  current_month: "Mês atual",
+};
+
 async function buildMessage(report: MetricReportRow): Promise<string> {
   if (!report.account) throw new Error("Conta de anúncio não encontrada.");
 
@@ -46,7 +53,7 @@ async function buildMessage(report: MetricReportRow): Promise<string> {
 
   const vars: Record<string, string> = {
     conta: report.account.name,
-    periodo: report.period,
+    periodo: PERIOD_LABEL[report.period] ?? report.period,
     data_inicio: insights.dateStart,
     data_fim: insights.dateStop,
     investimento: currencyFmt(insights.spend, currency),
@@ -81,7 +88,12 @@ export async function sendScheduledReports(): Promise<void> {
   const reports = (data ?? []) as unknown as MetricReportRow[];
 
   for (const report of reports) {
-    await sendOne(supabase, report);
+    try {
+      await sendOne(supabase, report);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`Erro ao enviar relatório "${report.name}" (${report.id}): ${message}`);
+    }
   }
 }
 
