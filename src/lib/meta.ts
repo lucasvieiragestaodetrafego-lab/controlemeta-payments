@@ -46,7 +46,7 @@ export class MetaApiError extends Error {
   }
 }
 
-function getConfig() {
+export function getConfig() {
   const token = process.env.META_SYSTEM_USER_TOKEN;
   const businessId = process.env.META_BUSINESS_ID;
   const version = process.env.META_API_VERSION || "v21.0";
@@ -85,7 +85,7 @@ interface Paged<T> {
 }
 
 /** Busca todas as páginas de um edge, seguindo os cursores de paginação. */
-async function graphGetAll<T>(
+export async function graphGetAll<T>(
   path: string,
   params: Record<string, string>,
 ): Promise<T[]> {
