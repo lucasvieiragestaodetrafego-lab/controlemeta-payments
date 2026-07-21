@@ -6,13 +6,19 @@ import {
   deleteMetricReport,
   forceSendReportAction,
 } from "@/app/actions";
+import EditMetricReportModal from "@/app/(app)/relatorios/EditMetricReportModal";
 
 export interface MetricReportRow {
   id: string;
   name: string;
   accountName: string;
+  whatsappGroupId: string;
   whatsappGroupName: string | null;
   frequency: string;
+  sendHour: number;
+  period: string;
+  messageTemplate: string;
+  creativeRankingSize: number | null;
   nextSendAt: string | null;
   isActive: boolean;
 }
@@ -77,6 +83,7 @@ export default function MetricReportsTable({ rows }: { rows: MetricReportRow[] }
               {row.nextSendAt ? new Date(row.nextSendAt).toLocaleString("pt-BR") : "—"}
             </td>
             <td className="px-4 py-3">
+              <EditMetricReportModal report={row} />
               <button
                 type="button"
                 onClick={() => sendNow(row.id)}
