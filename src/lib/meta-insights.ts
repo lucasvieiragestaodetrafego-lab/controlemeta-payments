@@ -47,7 +47,6 @@ interface RawInsightRow {
   date_stop?: string;
   ad_id?: string;
   ad_name?: string;
-  effective_object_story_id?: string;
 }
 
 /** Escolhe o primeiro tipo de conversão com valor > 0; senão cai para o primeiro da lista (0). */
@@ -64,7 +63,7 @@ async function fetchInsights(adAccountId: string, period: ReportPeriod, level: "
   const fields =
     level === "account"
       ? "spend,clicks,ctr,cpc,reach,actions,action_values,date_start,date_stop"
-      : "spend,clicks,ctr,actions,ad_id,ad_name,effective_object_story_id";
+      : "spend,clicks,ctr,actions,ad_id,ad_name";
 
   const params: Record<string, string> = {
     fields,
@@ -152,9 +151,9 @@ export async function getTopCreatives(
     return {
       adId: row.ad_id ?? "",
       adName: row.ad_name ?? "—",
-      permalink: row.effective_object_story_id
-        ? `https://www.facebook.com/${row.effective_object_story_id}`
-        : null,
+      // Link do post não é um campo do endpoint /insights — buscar o
+      // permalink exigiria uma chamada extra por anúncio (fora de escopo por ora).
+      permalink: null,
       conversions,
       clicks,
       ctr: Number(row.ctr ?? 0),

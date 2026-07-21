@@ -5,6 +5,7 @@ import Modal from "@/app/Modal";
 import { updateMetricReport } from "@/app/actions";
 import type { MetricReportRow } from "@/app/MetricReportsTable";
 import GroupSelect from "@/app/GroupSelect";
+import MessageTemplateField from "./MessageTemplateField";
 
 export default function EditMetricReportModal({ report }: { report: MetricReportRow }) {
   const [open, setOpen] = useState(false);
@@ -104,16 +105,7 @@ export default function EditMetricReportModal({ report }: { report: MetricReport
             />
           </div>
 
-          <div>
-            <label className="mb-1 block text-sm text-slate-300">Mensagem</label>
-            <textarea
-              name="message_template"
-              rows={10}
-              value={template}
-              onChange={(e) => setTemplate(e.target.value)}
-              className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs"
-            />
-          </div>
+          <MessageTemplateField value={template} onChange={setTemplate} />
 
           <button
             type="submit"

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createMetricReport } from "@/app/actions";
 import GroupSelect from "@/app/GroupSelect";
+import MessageTemplateField from "./MessageTemplateField";
 
 const DEFAULT_TEMPLATE =
   "📊 *Relatório de Campanha*\n\n" +
@@ -113,19 +114,7 @@ export default function NewMetricReportForm({
         <GroupSelect />
       </div>
 
-      <div>
-        <label className="mb-1 block text-sm text-slate-300">Mensagem</label>
-        <textarea
-          name="message_template"
-          rows={10}
-          value={template}
-          onChange={(e) => setTemplate(e.target.value)}
-          className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs"
-        />
-        <p className="mt-1 text-xs text-slate-500">
-          Variáveis: {"{conta} {periodo} {data_inicio} {data_fim} {investimento} {cliques} {alcance} {conversoes} {custo_por_conversao} {roas} {ticket_medio} {top_criativos}"}
-        </p>
-      </div>
+      <MessageTemplateField value={template} onChange={setTemplate} />
 
       <button
         type="submit"

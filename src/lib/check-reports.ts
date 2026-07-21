@@ -43,12 +43,17 @@ async function buildMessage(report: MetricReportRow): Promise<string> {
 
   let topCreativesText = "";
   if (report.creative_ranking_size) {
-    const creatives = await getTopCreatives(
-      report.account.meta_account_id,
-      report.period,
-      report.creative_ranking_size,
-    );
-    topCreativesText = formatCreativeRankingText(creatives, insights.resultLabel);
+    try {
+      const creatives = await getTopCreatives(
+        report.account.meta_account_id,
+        report.period,
+        report.creative_ranking_size,
+      );
+      topCreativesText = formatCreativeRankingText(creatives, insights.resultLabel);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`Erro ao buscar ranking de criativos (relatório "${report.name}"): ${message}`);
+    }
   }
 
   const vars: Record<string, string> = {
