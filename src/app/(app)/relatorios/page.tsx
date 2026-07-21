@@ -1,7 +1,10 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import MetricReportsTable, { type MetricReportRow } from "@/app/MetricReportsTable";
+import NewReportModal from "@/app/NewReportModal";
+import NewMetricReportSection from "./NewMetricReportSection";
 
 interface RawReport {
   id: string;
@@ -42,9 +45,16 @@ export default async function RelatoriosPage() {
 
   return (
     <main className="mx-auto max-w-[1600px] p-6">
-      <header className="mb-6">
-        <h1 className="text-xl font-semibold">Relatórios</h1>
-        <p className="text-sm text-slate-400">Métricas de campanha enviadas por WhatsApp.</p>
+      <header className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold">Relatórios</h1>
+          <p className="text-sm text-slate-400">Métricas de campanha enviadas por WhatsApp.</p>
+        </div>
+        <NewReportModal>
+          <Suspense fallback={<p className="text-sm text-slate-500">Carregando contas…</p>}>
+            <NewMetricReportSection />
+          </Suspense>
+        </NewReportModal>
       </header>
       <MetricReportsTable rows={rows} />
     </main>
