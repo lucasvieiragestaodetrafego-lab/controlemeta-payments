@@ -13,6 +13,7 @@ interface RawReport {
   whatsapp_group_name: string | null;
   frequency: string;
   send_hour: number;
+  send_minute: number;
   period: string;
   message_template: string;
   creative_ranking_size: number | null;
@@ -32,7 +33,7 @@ export default async function RelatoriosPage() {
   const { data, error } = await admin
     .from("metric_reports")
     .select(
-      "id, name, whatsapp_group_id, whatsapp_group_name, frequency, send_hour, period, message_template, creative_ranking_size, next_send_at, is_active, ad_accounts(name)",
+      "id, name, whatsapp_group_id, whatsapp_group_name, frequency, send_hour, send_minute, period, message_template, creative_ranking_size, next_send_at, is_active, ad_accounts(name)",
     )
     .order("name");
 
@@ -46,6 +47,7 @@ export default async function RelatoriosPage() {
     whatsappGroupName: r.whatsapp_group_name,
     frequency: r.frequency,
     sendHour: r.send_hour,
+    sendMinute: r.send_minute,
     period: r.period,
     messageTemplate: r.message_template,
     creativeRankingSize: r.creative_ranking_size,

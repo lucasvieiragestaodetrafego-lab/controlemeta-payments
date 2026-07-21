@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createMetricReport } from "@/app/actions";
 import GroupSelect from "@/app/GroupSelect";
 import MessageTemplateField from "./MessageTemplateField";
+import HourMinuteInput from "./HourMinuteInput";
 
 const DEFAULT_TEMPLATE =
   "📊 *Relatório de Campanha*\n\n" +
@@ -65,17 +66,7 @@ export default function NewMetricReportForm({
             <option value="monthly">Mensal</option>
           </select>
         </div>
-        <div>
-          <label className="mb-1 block text-sm text-slate-300">Horário (UTC)</label>
-          <input
-            type="number"
-            name="send_hour"
-            min={0}
-            max={23}
-            defaultValue={9}
-            className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-          />
-        </div>
+        <HourMinuteInput />
       </div>
 
       <div className="grid grid-cols-2 gap-3">

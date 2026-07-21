@@ -12,6 +12,7 @@ interface MetricReportRow {
   whatsapp_group_id: string;
   frequency: ReportFrequency;
   send_hour: number;
+  send_minute: number;
   period: ReportPeriod;
   message_template: string;
   creative_ranking_size: number | null;
@@ -76,7 +77,7 @@ async function buildMessage(report: MetricReportRow): Promise<string> {
 }
 
 const SELECT_REPORT =
-  "id, name, ad_account_id, whatsapp_group_id, frequency, send_hour, period, message_template, creative_ranking_size, account:ad_accounts(meta_account_id, name, currency)";
+  "id, name, ad_account_id, whatsapp_group_id, frequency, send_hour, send_minute, period, message_template, creative_ranking_size, account:ad_accounts(meta_account_id, name, currency)";
 
 /** Envia todos os relatórios agendados cujo `next_send_at` já venceu. */
 export async function sendScheduledReports(): Promise<void> {
@@ -112,7 +113,7 @@ async function sendOne(supabase: SupabaseClient, report: MetricReportRow): Promi
     whatsapp_message_id: sendResult.messageId,
   });
 
-  const nextSendAt = computeNextSendAt(report.frequency, report.send_hour, new Date());
+  const nextSendAt = computeNextSendAt(report.frequency, report.send_hour, report.send_minute, new Date());
   await supabase
     .from("metric_reports")
     .update({ next_send_at: nextSendAt.toISOString() })

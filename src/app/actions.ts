@@ -302,6 +302,7 @@ export async function createMetricReport(formData: FormData) {
   const whatsappGroupName = (formData.get("whatsapp_group_name") as string || "").trim() || null;
   const frequency = formData.get("frequency") as "daily" | "weekly" | "monthly";
   const sendHour = Number(formData.get("send_hour") || "9");
+  const sendMinute = Number(formData.get("send_minute") || "0");
   const period = formData.get("period") as string;
   const messageTemplate = (formData.get("message_template") as string || "").trim();
   const creativeRankingSizeRaw = formData.get("creative_ranking_size") as string;
@@ -312,7 +313,7 @@ export async function createMetricReport(formData: FormData) {
   }
 
   const admin = getSupabaseAdmin();
-  const nextSendAt = computeNextSendAt(frequency, sendHour, new Date());
+  const nextSendAt = computeNextSendAt(frequency, sendHour, sendMinute, new Date());
 
   const { error } = await admin.from("metric_reports").insert({
     name,
@@ -321,6 +322,7 @@ export async function createMetricReport(formData: FormData) {
     whatsapp_group_name: whatsappGroupName,
     frequency,
     send_hour: sendHour,
+    send_minute: sendMinute,
     period,
     message_template: messageTemplate,
     creative_ranking_size: creativeRankingSize,
@@ -342,6 +344,7 @@ export async function updateMetricReport(formData: FormData) {
   const whatsappGroupName = (formData.get("whatsapp_group_name") as string || "").trim() || null;
   const frequency = formData.get("frequency") as "daily" | "weekly" | "monthly";
   const sendHour = Number(formData.get("send_hour") || "9");
+  const sendMinute = Number(formData.get("send_minute") || "0");
   const period = formData.get("period") as string;
   const messageTemplate = (formData.get("message_template") as string || "").trim();
   const creativeRankingSizeRaw = formData.get("creative_ranking_size") as string;
@@ -360,6 +363,7 @@ export async function updateMetricReport(formData: FormData) {
       whatsapp_group_name: whatsappGroupName,
       frequency,
       send_hour: sendHour,
+      send_minute: sendMinute,
       period,
       message_template: messageTemplate,
       creative_ranking_size: creativeRankingSize,

@@ -6,6 +6,7 @@ import { updateMetricReport } from "@/app/actions";
 import type { MetricReportRow } from "@/app/MetricReportsTable";
 import GroupSelect from "@/app/GroupSelect";
 import MessageTemplateField from "./MessageTemplateField";
+import HourMinuteInput from "./HourMinuteInput";
 
 export default function EditMetricReportModal({ report }: { report: MetricReportRow }) {
   const [open, setOpen] = useState(false);
@@ -53,17 +54,7 @@ export default function EditMetricReportModal({ report }: { report: MetricReport
                 <option value="monthly">Mensal</option>
               </select>
             </div>
-            <div>
-              <label className="mb-1 block text-sm text-slate-300">Horário (UTC)</label>
-              <input
-                type="number"
-                name="send_hour"
-                min={0}
-                max={23}
-                defaultValue={report.sendHour}
-                className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              />
-            </div>
+            <HourMinuteInput defaultHour={report.sendHour} defaultMinute={report.sendMinute} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">

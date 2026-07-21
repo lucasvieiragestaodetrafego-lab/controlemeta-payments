@@ -16,6 +16,7 @@ export interface MetricReportRow {
   whatsappGroupName: string | null;
   frequency: string;
   sendHour: number;
+  sendMinute: number;
   period: string;
   messageTemplate: string;
   creativeRankingSize: number | null;
