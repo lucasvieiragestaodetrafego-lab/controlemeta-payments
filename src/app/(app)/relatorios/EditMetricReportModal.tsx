@@ -4,6 +4,7 @@ import { useState } from "react";
 import Modal from "@/app/Modal";
 import { updateMetricReport } from "@/app/actions";
 import type { MetricReportRow } from "@/app/MetricReportsTable";
+import GroupSelect from "@/app/GroupSelect";
 
 export default function EditMetricReportModal({ report }: { report: MetricReportRow }) {
   const [open, setOpen] = useState(false);
@@ -95,15 +96,12 @@ export default function EditMetricReportModal({ report }: { report: MetricReport
 
           <div>
             <label className="mb-1 block text-sm text-slate-300">
-              ID do grupo/número de WhatsApp
+              Grupo/número de WhatsApp
             </label>
-            <input
-              name="whatsapp_group_id"
-              defaultValue={report.whatsappGroupId}
-              required
-              className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+            <GroupSelect
+              defaultGroupId={report.whatsappGroupId}
+              defaultGroupName={report.whatsappGroupName}
             />
-            <input type="hidden" name="whatsapp_group_name" value={report.whatsappGroupName ?? ""} />
           </div>
 
           <div>

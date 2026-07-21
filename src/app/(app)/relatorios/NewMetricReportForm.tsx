@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createMetricReport } from "@/app/actions";
+import GroupSelect from "@/app/GroupSelect";
 
 const DEFAULT_TEMPLATE =
   "📊 *Relatório de Campanha*\n\n" +
@@ -107,14 +108,9 @@ export default function NewMetricReportForm({
 
       <div>
         <label className="mb-1 block text-sm text-slate-300">
-          ID do grupo/número de WhatsApp
+          Grupo/número de WhatsApp
         </label>
-        <input
-          name="whatsapp_group_id"
-          required
-          className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-        />
-        <input type="hidden" name="whatsapp_group_name" value="" />
+        <GroupSelect />
       </div>
 
       <div>
