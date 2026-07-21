@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface Variable {
   key: string;
@@ -23,20 +23,44 @@ const CATEGORIES: Category[] = [
     ],
   },
   {
-    name: "Cliques e Alcance",
+    name: "Alcance e Frequência",
     variables: [
-      { key: "cliques", label: "Cliques" },
       { key: "alcance", label: "Alcance" },
+      { key: "impressoes", label: "Impressões" },
+      { key: "frequencia", label: "Frequência" },
     ],
   },
   {
-    name: "Investimento e Resultado",
+    name: "Cliques",
+    variables: [
+      { key: "cliques", label: "Cliques" },
+      { key: "cliques_unicos", label: "Cliques únicos" },
+      { key: "ctr", label: "CTR" },
+      { key: "ctr_unico", label: "CTR único" },
+    ],
+  },
+  {
+    name: "Custo",
     variables: [
       { key: "investimento", label: "Investimento" },
-      { key: "conversoes", label: "Conversões" },
+      { key: "cpc", label: "CPC (custo por clique)" },
+      { key: "cpm", label: "CPM (custo por mil impressões)" },
       { key: "custo_por_conversao", label: "Custo por conversão" },
+    ],
+  },
+  {
+    name: "Conversão e Resultado",
+    variables: [
+      { key: "conversoes", label: "Conversões" },
       { key: "roas", label: "ROAS" },
       { key: "ticket_medio", label: "Ticket médio" },
+    ],
+  },
+  {
+    name: "Engajamento",
+    variables: [
+      { key: "engajamento", label: "Engajamento (curtidas, comentários, cliques no post)" },
+      { key: "visualizacoes_video", label: "Visualizações de vídeo" },
     ],
   },
   {
@@ -48,9 +72,10 @@ const CATEGORIES: Category[] = [
 const ALL_VARIABLES = CATEGORIES.flatMap((c) => c.variables);
 
 /**
- * Campo de mensagem com um seletor de variáveis (busca + categorias, igual ao
- * padrão do dropdown de grupo do WhatsApp) que insere {chave} na posição do
- * cursor do textarea.
+ * Campo de mensagem com um seletor de variáveis (busca + categorias). Clicar
+ * numa variável COPIA {chave} pra área de transferência — o usuário cola
+ * manualmente onde quiser no texto (evita "colar" no lugar errado quando o
+ * cursor perde a posição por causa do próprio clique no seletor).
  */
 export default function MessageTemplateField({
   value,
@@ -59,33 +84,32 @@ export default function MessageTemplateField({
   value: string;
   onChange: (value: string) => void;
 }) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>("Todas");
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  function insertVariable(key: string) {
-    const token = `{${key}}`;
-    const textarea = textareaRef.current;
-
-    if (!textarea) {
-      onChange(value + token);
-      setOpen(false);
-      return;
+  useEffect(() => {
+    if (!open) return;
+    function onClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
     }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [open]);
 
-    const start = textarea.selectionStart ?? value.length;
-    const end = textarea.selectionEnd ?? value.length;
-    const next = value.slice(0, start) + token + value.slice(end);
-    onChange(next);
-    setOpen(false);
-    setQuery("");
-
-    requestAnimationFrame(() => {
-      textarea.focus();
-      const cursor = start + token.length;
-      textarea.setSelectionRange(cursor, cursor);
-    });
+  async function copyVariable(key: string) {
+    const token = `{${key}}`;
+    try {
+      await navigator.clipboard.writeText(token);
+    } catch {
+      // clipboard indisponível (ex: contexto não seguro) — usuário digita manualmente
+    }
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey((k) => (k === key ? null : k)), 1500);
   }
 
   const pool = category === "Todas"
@@ -101,13 +125,13 @@ export default function MessageTemplateField({
     <div>
       <label className="mb-1 block text-sm text-slate-300">Mensagem</label>
 
-      <div className="relative mb-2">
+      <div ref={containerRef} className="relative mb-2">
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
           className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-1.5 text-left text-sm text-slate-400"
         >
-          {"<>"} Clique aqui para selecionar uma variável
+          {"<>"} Clique aqui para copiar uma variável
         </button>
 
         {open && (
@@ -140,22 +164,24 @@ export default function MessageTemplateField({
                 <button
                   key={v.key}
                   type="button"
-                  onClick={() => insertVariable(v.key)}
-                  className="flex w-full items-center justify-between px-2 py-1.5 text-left text-sm text-slate-200 hover:bg-slate-800"
+                  onClick={() => copyVariable(v.key)}
+                  className="flex w-full items-center justify-between gap-2 px-2 py-1.5 text-left text-sm text-slate-200 hover:bg-slate-800"
                 >
                   <span>{v.label}</span>
                   <span className="rounded bg-sky-950 px-1.5 py-0.5 font-mono text-xs text-sky-300">
-                    {`{${v.key}}`}
+                    {copiedKey === v.key ? "Copiado!" : `{${v.key}}`}
                   </span>
                 </button>
               ))}
             </div>
+            <p className="border-t border-slate-800 px-2 py-1.5 text-xs text-slate-500">
+              Clique numa variável pra copiar, depois cole (Ctrl+V) onde quiser no texto.
+            </p>
           </div>
         )}
       </div>
 
       <textarea
-        ref={textareaRef}
         name="message_template"
         rows={10}
         value={value}

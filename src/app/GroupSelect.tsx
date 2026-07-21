@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { listWhatsAppGroupsAction } from "@/app/actions";
 import type { WhatsAppGroup } from "@/lib/zapi";
 
@@ -25,6 +25,18 @@ export default function GroupSelect({
   const [selected, setSelected] = useState<WhatsAppGroup | null>(
     defaultGroupId ? { id: defaultGroupId, name: defaultGroupName ?? "" } : null,
   );
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [open]);
 
   useEffect(() => {
     let cancelled = false;
@@ -46,7 +58,7 @@ export default function GroupSelect({
   const filtered = groups.filter((g) => g.name.toLowerCase().includes(query.toLowerCase()));
 
   return (
-    <div className="relative">
+    <div ref={containerRef} className="relative">
       <input type="hidden" name="whatsapp_group_id" value={selected?.id ?? ""} />
       <input type="hidden" name="whatsapp_group_name" value={selected?.name ?? ""} />
       <button

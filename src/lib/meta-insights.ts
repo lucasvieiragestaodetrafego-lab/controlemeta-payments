@@ -40,7 +40,12 @@ interface RawInsightRow {
   clicks?: string;
   ctr?: string;
   cpc?: string;
+  cpm?: string;
   reach?: string;
+  impressions?: string;
+  frequency?: string;
+  unique_clicks?: string;
+  unique_ctr?: string;
   actions?: InsightAction[];
   action_values?: InsightAction[];
   date_start?: string;
@@ -48,6 +53,11 @@ interface RawInsightRow {
   ad_id?: string;
   ad_name?: string;
 }
+
+/** Tipos de ação somados em {engajamento} — curtidas, comentários, compartilhamentos e cliques no post. */
+const ENGAGEMENT_ACTION_TYPES = ["post_engagement"];
+/** Tipo de ação somado em {visualizacoes_video}. */
+const VIDEO_VIEW_ACTION_TYPES = ["video_view"];
 
 /** Escolhe o primeiro tipo de conversão com valor > 0; senão cai para o primeiro da lista (0). */
 function pickConversions(actions: InsightAction[] | undefined): { conversions: number; actionValue: number; label: string } {
@@ -62,7 +72,7 @@ async function fetchInsights(adAccountId: string, period: ReportPeriod, level: "
   const { token, version } = getConfig();
   const fields =
     level === "account"
-      ? "spend,clicks,ctr,cpc,reach,actions,action_values,date_start,date_stop"
+      ? "spend,clicks,ctr,cpc,cpm,reach,impressions,frequency,unique_clicks,unique_ctr,actions,action_values,date_start,date_stop"
       : "spend,clicks,ctr,actions,ad_id,ad_name";
 
   const params: Record<string, string> = {
@@ -80,7 +90,14 @@ export interface AccountInsights {
   clicks: number;
   ctr: number;
   cpc: number;
+  cpm: number;
   reach: number;
+  impressions: number;
+  frequency: number;
+  uniqueClicks: number;
+  uniqueCtr: number;
+  engagement: number;
+  videoViews: number;
   conversions: number;
   costPerConversion: number | null;
   roas: number | null;
@@ -104,7 +121,14 @@ export async function getAccountInsights(
       clicks: 0,
       ctr: 0,
       cpc: 0,
+      cpm: 0,
       reach: 0,
+      impressions: 0,
+      frequency: 0,
+      uniqueClicks: 0,
+      uniqueCtr: 0,
+      engagement: 0,
+      videoViews: 0,
       conversions: 0,
       costPerConversion: null,
       roas: null,
@@ -125,7 +149,14 @@ export async function getAccountInsights(
     clicks: Number(row.clicks ?? 0),
     ctr: Number(row.ctr ?? 0),
     cpc: Number(row.cpc ?? 0),
+    cpm: Number(row.cpm ?? 0),
     reach: Number(row.reach ?? 0),
+    impressions: Number(row.impressions ?? 0),
+    frequency: Number(row.frequency ?? 0),
+    uniqueClicks: Number(row.unique_clicks ?? 0),
+    uniqueCtr: Number(row.unique_ctr ?? 0),
+    engagement: sumActionValue(row.actions, ENGAGEMENT_ACTION_TYPES),
+    videoViews: sumActionValue(row.actions, VIDEO_VIEW_ACTION_TYPES),
     conversions,
     costPerConversion,
     roas: computeRoas(spend, actionValue),
