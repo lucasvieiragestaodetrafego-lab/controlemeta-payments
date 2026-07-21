@@ -4,6 +4,7 @@ import { getAccountInsights, getTopCreatives, type ReportPeriod } from "./meta-i
 import { formatCreativeRankingText } from "./report-metrics";
 import { computeNextSendAt, type ReportFrequency } from "./report-schedule";
 import { sendWhatsAppMessage } from "./zapi";
+import { TRACKED_ACTIONS } from "./report-variables";
 
 interface MetricReportRow {
   id: string;
@@ -81,6 +82,12 @@ async function buildMessage(report: MetricReportRow): Promise<string> {
     ticket_medio: insights.ticketMedio != null ? currencyFmt(insights.ticketMedio, currency) : "—",
     top_criativos: topCreativesText,
   };
+
+  for (const action of TRACKED_ACTIONS) {
+    const count = insights.detailedActions[action.key] ?? 0;
+    vars[action.key] = String(count);
+    vars[action.costKey] = count > 0 ? currencyFmt(insights.spend / count, currency) : "—";
+  }
 
   return renderReportMessage(report.message_template, vars);
 }

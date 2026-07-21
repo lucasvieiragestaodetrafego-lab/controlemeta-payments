@@ -1,75 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-
-interface Variable {
-  key: string;
-  label: string;
-}
-
-interface Category {
-  name: string;
-  variables: Variable[];
-}
-
-const CATEGORIES: Category[] = [
-  {
-    name: "Geral",
-    variables: [
-      { key: "conta", label: "Conta" },
-      { key: "periodo", label: "Período" },
-      { key: "data_inicio", label: "Data início" },
-      { key: "data_fim", label: "Data fim" },
-    ],
-  },
-  {
-    name: "Alcance e Frequência",
-    variables: [
-      { key: "alcance", label: "Alcance" },
-      { key: "impressoes", label: "Impressões" },
-      { key: "frequencia", label: "Frequência" },
-    ],
-  },
-  {
-    name: "Cliques",
-    variables: [
-      { key: "cliques", label: "Cliques" },
-      { key: "cliques_unicos", label: "Cliques únicos" },
-      { key: "ctr", label: "CTR" },
-      { key: "ctr_unico", label: "CTR único" },
-    ],
-  },
-  {
-    name: "Custo",
-    variables: [
-      { key: "investimento", label: "Investimento" },
-      { key: "cpc", label: "CPC (custo por clique)" },
-      { key: "cpm", label: "CPM (custo por mil impressões)" },
-      { key: "custo_por_conversao", label: "Custo por conversão" },
-    ],
-  },
-  {
-    name: "Conversão e Resultado",
-    variables: [
-      { key: "conversoes", label: "Conversões" },
-      { key: "roas", label: "ROAS" },
-      { key: "ticket_medio", label: "Ticket médio" },
-    ],
-  },
-  {
-    name: "Engajamento",
-    variables: [
-      { key: "engajamento", label: "Engajamento (curtidas, comentários, cliques no post)" },
-      { key: "visualizacoes_video", label: "Visualizações de vídeo" },
-    ],
-  },
-  {
-    name: "Criativos",
-    variables: [{ key: "top_criativos", label: "Top criativos" }],
-  },
-];
-
-const ALL_VARIABLES = CATEGORIES.flatMap((c) => c.variables);
+import { VARIABLE_CATEGORIES, ALL_VARIABLES } from "@/lib/report-variables";
 
 /**
  * Campo de mensagem com um seletor de variáveis (busca + categorias). Clicar
@@ -114,7 +46,7 @@ export default function MessageTemplateField({
 
   const pool = category === "Todas"
     ? ALL_VARIABLES
-    : CATEGORIES.find((c) => c.name === category)?.variables ?? [];
+    : VARIABLE_CATEGORIES.find((c) => c.name === category)?.variables ?? [];
   const filtered = pool.filter(
     (v) =>
       v.label.toLowerCase().includes(query.toLowerCase()) ||
@@ -150,7 +82,7 @@ export default function MessageTemplateField({
               className="w-full border-b border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-200"
             >
               <option value="Todas">Todas as categorias</option>
-              {CATEGORIES.map((c) => (
+              {VARIABLE_CATEGORIES.map((c) => (
                 <option key={c.name} value={c.name}>
                   {c.name}
                 </option>

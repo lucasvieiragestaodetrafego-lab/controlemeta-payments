@@ -8,6 +8,7 @@ import {
   type CreativeInsight,
   type InsightAction,
 } from "./report-metrics";
+import { TRACKED_ACTIONS } from "./report-variables";
 
 export type ReportPeriod = "today" | "last_7_days" | "last_30_days" | "current_month";
 
@@ -98,6 +99,8 @@ export interface AccountInsights {
   uniqueCtr: number;
   engagement: number;
   videoViews: number;
+  /** Contagem de cada resultado específico (compras, carrinho, leads, etc.), por chave de TRACKED_ACTIONS. */
+  detailedActions: Record<string, number>;
   conversions: number;
   costPerConversion: number | null;
   roas: number | null;
@@ -129,6 +132,7 @@ export async function getAccountInsights(
       uniqueCtr: 0,
       engagement: 0,
       videoViews: 0,
+      detailedActions: Object.fromEntries(TRACKED_ACTIONS.map((a) => [a.key, 0])),
       conversions: 0,
       costPerConversion: null,
       roas: null,
@@ -157,6 +161,9 @@ export async function getAccountInsights(
     uniqueCtr: Number(row.unique_ctr ?? 0),
     engagement: sumActionValue(row.actions, ENGAGEMENT_ACTION_TYPES),
     videoViews: sumActionValue(row.actions, VIDEO_VIEW_ACTION_TYPES),
+    detailedActions: Object.fromEntries(
+      TRACKED_ACTIONS.map((a) => [a.key, sumActionValue(row.actions, a.actionTypes)]),
+    ),
     conversions,
     costPerConversion,
     roas: computeRoas(spend, actionValue),
