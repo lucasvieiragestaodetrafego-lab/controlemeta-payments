@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { sortOverviewRows, type OverviewSortKey } from "@/lib/dashboard-sort";
+import { formatMetricValue } from "@/lib/metric-format";
+import type { MetricDefinition } from "@/lib/metrics-catalog";
 
 export interface OverviewRow {
   id: string;
@@ -13,6 +15,8 @@ export interface OverviewRow {
   resultValue: number;
   costPerResult: number | null;
   roas: number | null;
+  /** Valores das colunas extras selecionadas pelo usuário (Task 10), por chave do catálogo. Vazio quando nenhuma coluna extra está selecionada. */
+  extraMetrics: Record<string, number | null>;
   error: string | null;
 }
 
@@ -26,7 +30,13 @@ const COLUMNS: { key: OverviewSortKey; label: string }[] = [
   { key: "roas", label: "ROAS" },
 ];
 
-export default function DashboardOverviewTable({ rows }: { rows: OverviewRow[] }) {
+export default function DashboardOverviewTable({
+  rows,
+  extraColumns,
+}: {
+  rows: OverviewRow[];
+  extraColumns: MetricDefinition[];
+}) {
   const [sortKey, setSortKey] = useState<OverviewSortKey>("spend");
   const [direction, setDirection] = useState<"asc" | "desc">("desc");
 
@@ -62,6 +72,11 @@ export default function DashboardOverviewTable({ rows }: { rows: OverviewRow[] }
               {col.label} {sortKey === col.key ? (direction === "asc" ? "▲" : "▼") : ""}
             </th>
           ))}
+          {extraColumns.map((col) => (
+            <th key={col.key} className="px-4 py-2">
+              {col.label}
+            </th>
+          ))}
         </tr>
       </thead>
       <tbody>
@@ -73,7 +88,7 @@ export default function DashboardOverviewTable({ rows }: { rows: OverviewRow[] }
               </Link>
             </td>
             {row.error ? (
-              <td colSpan={4} className="px-4 py-2 text-xs text-red-400">
+              <td colSpan={4 + extraColumns.length} className="px-4 py-2 text-xs text-red-400">
                 {row.error}
               </td>
             ) : (
@@ -88,6 +103,11 @@ export default function DashboardOverviewTable({ rows }: { rows: OverviewRow[] }
                 <td className="px-4 py-2">
                   {row.roas != null ? row.roas.toLocaleString("pt-BR", { minimumFractionDigits: 2 }) : "—"}
                 </td>
+                {extraColumns.map((col) => (
+                  <td key={col.key} className="px-4 py-2">
+                    {formatMetricValue(row.extraMetrics[col.key] ?? null, col.valueKind)}
+                  </td>
+                ))}
               </>
             )}
           </tr>
