@@ -42,7 +42,9 @@ export default async function DashboardPage({
         try {
           const [insights, extraMetrics] = await Promise.all([
             getAccountInsights(account.metaAccountId, selection),
-            getAccountMetricValues(account.metaAccountId, selection, selectedMetricKeys),
+            getAccountMetricValues(account.metaAccountId, selection, selectedMetricKeys).catch(
+              () => ({}),
+            ),
           ]);
           const resultValue = resultMetric
             ? insights.detailedActions[resultMetric.key] ?? 0
