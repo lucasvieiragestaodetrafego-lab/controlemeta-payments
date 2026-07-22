@@ -1,5 +1,5 @@
 // src/lib/meta-insights.ts
-import { getConfig, graphGet, graphGetAll } from "./meta";
+import { graphGet, graphGetAll } from "./meta";
 import {
   sumActionValue,
   computeRoas,
@@ -18,6 +18,25 @@ const DATE_PRESET: Record<ReportPeriod, string> = {
   last_30_days: "last_30d",
   current_month: "this_month",
 };
+
+/** Seleção de período: preset fixo (usado pelos Relatórios) ou intervalo customizado (usado pelo Dashboard). */
+export type PeriodSelection =
+  | { type: "preset"; period: ReportPeriod }
+  | { type: "custom"; since: string; until: string };
+
+/** Monta os parâmetros de data da Graph API a partir de uma seleção de período. Função pura, sem chamada de rede. */
+export function buildPeriodParams(selection: PeriodSelection): Record<string, string> {
+  if (selection.type === "preset") {
+    return { date_preset: DATE_PRESET[selection.period] };
+  }
+  return { time_range: JSON.stringify({ since: selection.since, until: selection.until }) };
+}
+
+/** Normaliza um ReportPeriod (usado pelos Relatórios) para PeriodSelection (usado internamente). */
+function normalizeSelection(selection: PeriodSelection | ReportPeriod): PeriodSelection {
+  if (typeof selection === "string") return { type: "preset", period: selection };
+  return selection;
+}
 
 /**
  * Tipos de ação considerados "conversão" nesta ordem de prioridade — usa o
@@ -69,8 +88,7 @@ function pickConversions(actions: InsightAction[] | undefined): { conversions: n
   return { conversions: 0, actionValue: 0, label: CONVERSION_ACTION_TYPES[0].label };
 }
 
-async function fetchInsights(adAccountId: string, period: ReportPeriod, level: "account" | "ad") {
-  const { token, version } = getConfig();
+async function fetchInsights(adAccountId: string, selection: PeriodSelection, level: "account" | "ad") {
   const fields =
     level === "account"
       ? "spend,clicks,ctr,cpc,cpm,reach,impressions,frequency,unique_clicks,unique_ctr,actions,action_values,date_start,date_stop"
@@ -78,8 +96,7 @@ async function fetchInsights(adAccountId: string, period: ReportPeriod, level: "
 
   const params: Record<string, string> = {
     fields,
-    date_preset: DATE_PRESET[period],
-    access_token: token,
+    ...buildPeriodParams(selection),
   };
   if (level === "ad") params.level = "ad";
 
@@ -115,9 +132,9 @@ export interface AccountInsights {
 /** Busca métricas agregadas da conta para o período informado. */
 export async function getAccountInsights(
   adAccountId: string,
-  period: ReportPeriod,
+  selection: PeriodSelection | ReportPeriod,
 ): Promise<AccountInsights> {
-  const rows = await fetchInsights(adAccountId, period, "account");
+  const rows = await fetchInsights(adAccountId, normalizeSelection(selection), "account");
   const row = rows[0];
 
   if (!row) {
@@ -215,10 +232,10 @@ async function getAdPermalink(adId: string): Promise<string | null> {
 /** Busca o ranking dos criativos com melhor desempenho no período. */
 export async function getTopCreatives(
   adAccountId: string,
-  period: ReportPeriod,
+  selection: PeriodSelection | ReportPeriod,
   limit: number,
 ): Promise<CreativeInsight[]> {
-  const rows = await fetchInsights(adAccountId, period, "ad");
+  const rows = await fetchInsights(adAccountId, normalizeSelection(selection), "ad");
 
   const creatives: CreativeInsight[] = rows.map((row) => {
     const clicks = Number(row.clicks ?? 0);
