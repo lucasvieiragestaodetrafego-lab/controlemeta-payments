@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { checkAllBalances, forceSendAlert } from "@/lib/check-balances";
 import { listWhatsAppGroupsCached, type WhatsAppGroup } from "@/lib/zapi";
+import { forceSendReport } from "@/lib/check-reports";
+import { computeNextSendAt } from "@/lib/report-schedule";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -286,6 +288,126 @@ export async function updateAccount(formData: FormData) {
 
   revalidatePath("/settings");
   revalidatePath("/");
+}
+
+// ---- Relatórios de métricas ----
+
+/** Cadastra um novo relatório de métricas para uma conta já registrada. */
+export async function createMetricReport(formData: FormData) {
+  await requireAuth();
+
+  const name = (formData.get("name") as string).trim();
+  const adAccountId = formData.get("ad_account_id") as string;
+  const whatsappGroupId = (formData.get("whatsapp_group_id") as string || "").trim();
+  const whatsappGroupName = (formData.get("whatsapp_group_name") as string || "").trim() || null;
+  const frequency = formData.get("frequency") as "daily" | "weekly" | "monthly";
+  const sendHour = Number(formData.get("send_hour") || "9");
+  const sendMinute = Number(formData.get("send_minute") || "0");
+  const period = formData.get("period") as string;
+  const messageTemplate = (formData.get("message_template") as string || "").trim();
+  const creativeRankingSizeRaw = formData.get("creative_ranking_size") as string;
+  const creativeRankingSize = creativeRankingSizeRaw ? Number(creativeRankingSizeRaw) : null;
+
+  if (!name || !adAccountId || !whatsappGroupId || !messageTemplate) {
+    throw new Error("Preencha nome, conta, destinatário e mensagem.");
+  }
+
+  const admin = getSupabaseAdmin();
+  const nextSendAt = computeNextSendAt(frequency, sendHour, sendMinute, new Date());
+
+  const { error } = await admin.from("metric_reports").insert({
+    name,
+    ad_account_id: adAccountId,
+    whatsapp_group_id: whatsappGroupId,
+    whatsapp_group_name: whatsappGroupName,
+    frequency,
+    send_hour: sendHour,
+    send_minute: sendMinute,
+    period,
+    message_template: messageTemplate,
+    creative_ranking_size: creativeRankingSize,
+    next_send_at: nextSendAt.toISOString(),
+  });
+
+  if (error) throw new Error(`Erro ao criar relatório: ${error.message}`);
+
+  revalidatePath("/relatorios");
+}
+
+/** Salva as edições de um relatório de métricas existente. */
+export async function updateMetricReport(formData: FormData) {
+  await requireAuth();
+
+  const id = formData.get("id") as string;
+  const name = (formData.get("name") as string).trim();
+  const whatsappGroupId = (formData.get("whatsapp_group_id") as string || "").trim();
+  const whatsappGroupName = (formData.get("whatsapp_group_name") as string || "").trim() || null;
+  const frequency = formData.get("frequency") as "daily" | "weekly" | "monthly";
+  const sendHour = Number(formData.get("send_hour") || "9");
+  const sendMinute = Number(formData.get("send_minute") || "0");
+  const period = formData.get("period") as string;
+  const messageTemplate = (formData.get("message_template") as string || "").trim();
+  const creativeRankingSizeRaw = formData.get("creative_ranking_size") as string;
+  const creativeRankingSize = creativeRankingSizeRaw ? Number(creativeRankingSizeRaw) : null;
+
+  if (!name || !whatsappGroupId || !messageTemplate) {
+    throw new Error("Preencha nome, destinatário e mensagem.");
+  }
+
+  const admin = getSupabaseAdmin();
+  const { error } = await admin
+    .from("metric_reports")
+    .update({
+      name,
+      whatsapp_group_id: whatsappGroupId,
+      whatsapp_group_name: whatsappGroupName,
+      frequency,
+      send_hour: sendHour,
+      send_minute: sendMinute,
+      period,
+      message_template: messageTemplate,
+      creative_ranking_size: creativeRankingSize,
+    })
+    .eq("id", id);
+
+  if (error) throw new Error(`Erro ao salvar relatório: ${error.message}`);
+
+  revalidatePath("/relatorios");
+}
+
+/** Liga/desliga o envio automático de um relatório de métricas. */
+export async function setMetricReportActive(reportId: string, enabled: boolean) {
+  await requireAuth();
+
+  const admin = getSupabaseAdmin();
+  const { error } = await admin
+    .from("metric_reports")
+    .update({ is_active: enabled })
+    .eq("id", reportId);
+
+  if (error) throw new Error(`Erro ao alterar relatório: ${error.message}`);
+
+  revalidatePath("/relatorios");
+}
+
+/** Exclui um relatório de métricas (e seu histórico de envio em cascata). */
+export async function deleteMetricReport(reportId: string) {
+  await requireAuth();
+
+  const admin = getSupabaseAdmin();
+  const { error } = await admin.from("metric_reports").delete().eq("id", reportId);
+
+  if (error) throw new Error(`Erro ao excluir relatório: ${error.message}`);
+
+  revalidatePath("/relatorios");
+}
+
+/** Dispara um relatório de métricas agora, fora do agendamento. */
+export async function forceSendReportAction(reportId: string) {
+  await requireAuth();
+  const result = await forceSendReport(reportId);
+  revalidatePath("/relatorios");
+  return result;
 }
 
 /** Cadastra uma nova conta de anúncio, criando o cliente se ainda não existir. */

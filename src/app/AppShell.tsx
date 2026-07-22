@@ -15,7 +15,9 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-  { href: "/", label: "Relatórios", icon: "🔔" },
+  { href: "/", label: "Alertas", icon: "🔔" },
+  { href: "/dashboard", label: "Dashboard", icon: "📈" },
+  { href: "/relatorios", label: "Relatórios", icon: "📊" },
   { href: "/templates", label: "Templates", icon: "💬" },
   { href: "/settings", label: "Configurações", icon: "⚙️", adminOnly: true },
   { href: "/usuarios", label: "Usuários", icon: "👥", adminOnly: true },
