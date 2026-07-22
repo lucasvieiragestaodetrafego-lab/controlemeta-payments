@@ -258,3 +258,35 @@ export async function getTopCreatives(
     ranked.map(async (c) => ({ ...c, permalink: await getAdPermalink(c.adId) })),
   );
 }
+
+export interface DailyPoint {
+  date: string;
+  spend: number;
+  result: number;
+}
+
+/** Converte linhas cruas da Graph API (uma por dia, via time_increment=1) em pontos {date, spend, result}. Função pura, testável sem rede. */
+export function parseDailyRows(rows: RawInsightRow[], resultActionTypes: string[]): DailyPoint[] {
+  return rows
+    .map((row) => ({
+      date: row.date_start ?? "",
+      spend: Number(row.spend ?? 0),
+      result: sumActionValue(row.actions, resultActionTypes),
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/** Busca gasto e resultado (métrica de conversão escolhida) por dia, para o gráfico de evolução do dashboard. */
+export async function getAccountInsightsDaily(
+  adAccountId: string,
+  selection: PeriodSelection | ReportPeriod,
+  resultActionTypes: string[],
+): Promise<DailyPoint[]> {
+  const params: Record<string, string> = {
+    fields: "spend,actions,date_start",
+    ...buildPeriodParams(normalizeSelection(selection)),
+    time_increment: "1",
+  };
+  const rows = await graphGetAll<RawInsightRow>(`/${adAccountId}/insights`, params);
+  return parseDailyRows(rows, resultActionTypes);
+}
