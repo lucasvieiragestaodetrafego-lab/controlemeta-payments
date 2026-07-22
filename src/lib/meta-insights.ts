@@ -9,6 +9,7 @@ import {
   type InsightAction,
 } from "./report-metrics";
 import { TRACKED_ACTIONS } from "./report-variables";
+import { buildMetricFields, extractMetricValues, type GraphInsightRow } from "./dashboard-metrics";
 
 export type ReportPeriod = "today" | "last_7_days" | "last_30_days" | "current_month";
 
@@ -299,4 +300,23 @@ export async function getAccountInsightsDaily(
   };
   const rows = await graphGetAll<RawInsightRow>(`/${adAccountId}/insights`, params);
   return parseDailyRows(rows, resultActionTypes);
+}
+
+/**
+ * Busca o valor de um conjunto arbitrário de métricas do catálogo
+ * (`metrics-catalog.ts`) para uma conta, no período informado. Usado pelas
+ * colunas extras (personalizáveis) da visão geral do Dashboard — os campos
+ * pedidos à Graph API variam conforme `metricKeys`, ao contrário de
+ * `getAccountInsights`, que sempre busca o mesmo conjunto fixo de campos.
+ */
+export async function getAccountMetricValues(
+  adAccountId: string,
+  selection: PeriodSelection | ReportPeriod,
+  metricKeys: string[],
+): Promise<Record<string, number | null>> {
+  if (metricKeys.length === 0) return {};
+  const fields = buildMetricFields(metricKeys).join(",");
+  const params: Record<string, string> = { fields, ...buildPeriodParams(normalizeSelection(selection)) };
+  const rows = await graphGetAll<GraphInsightRow>(`/${adAccountId}/insights`, params);
+  return extractMetricValues(rows[0] ?? {}, metricKeys);
 }
