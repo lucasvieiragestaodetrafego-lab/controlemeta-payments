@@ -8,6 +8,10 @@ import PeriodSelector from "../PeriodSelector";
 import ResultMetricSelector from "./ResultMetricSelector";
 import KpiCards from "./KpiCards";
 import SpendResultChart from "./SpendResultChart";
+import ConversionFunnel from "./ConversionFunnel";
+
+const CHECKOUT_METRIC = TRACKED_ACTIONS.find((a) => a.key === "checkout_iniciado")!;
+const LINK_CLICKS_METRIC = TRACKED_ACTIONS.find((a) => a.key === "cliques_link")!;
 
 export default async function DashboardAccountPage({
   params,
@@ -64,6 +68,14 @@ export default async function DashboardAccountPage({
       />
 
       <SpendResultChart daily={daily} resultLabel={resultMetric.label} />
+
+      <ConversionFunnel
+        reach={insights.reach}
+        linkClicks={insights.detailedActions[LINK_CLICKS_METRIC.key] ?? 0}
+        checkouts={insights.detailedActions[CHECKOUT_METRIC.key] ?? 0}
+        resultLabel={resultMetric.label}
+        resultValue={resultValue}
+      />
     </main>
   );
 }
