@@ -85,8 +85,10 @@ async function buildMessage(report: MetricReportRow): Promise<string> {
 
   for (const action of TRACKED_ACTIONS) {
     const count = insights.detailedActions[action.key] ?? 0;
+    const value = insights.detailedActionValues[action.valueKey] ?? 0;
     vars[action.key] = String(count);
     vars[action.costKey] = count > 0 ? currencyFmt(insights.spend / count, currency) : "—";
+    vars[action.valueKey] = currencyFmt(value, currency);
   }
 
   return renderReportMessage(report.message_template, vars);

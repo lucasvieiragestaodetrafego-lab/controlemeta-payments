@@ -101,6 +101,8 @@ export interface AccountInsights {
   videoViews: number;
   /** Contagem de cada resultado específico (compras, carrinho, leads, etc.), por chave de TRACKED_ACTIONS. */
   detailedActions: Record<string, number>;
+  /** Valor gerado (R$) de cada resultado específico, por chave de TRACKED_ACTIONS. */
+  detailedActionValues: Record<string, number>;
   conversions: number;
   costPerConversion: number | null;
   roas: number | null;
@@ -133,6 +135,7 @@ export async function getAccountInsights(
       engagement: 0,
       videoViews: 0,
       detailedActions: Object.fromEntries(TRACKED_ACTIONS.map((a) => [a.key, 0])),
+      detailedActionValues: Object.fromEntries(TRACKED_ACTIONS.map((a) => [a.valueKey, 0])),
       conversions: 0,
       costPerConversion: null,
       roas: null,
@@ -163,6 +166,9 @@ export async function getAccountInsights(
     videoViews: sumActionValue(row.actions, VIDEO_VIEW_ACTION_TYPES),
     detailedActions: Object.fromEntries(
       TRACKED_ACTIONS.map((a) => [a.key, sumActionValue(row.actions, a.actionTypes)]),
+    ),
+    detailedActionValues: Object.fromEntries(
+      TRACKED_ACTIONS.map((a) => [a.valueKey, sumActionValue(row.action_values, a.actionTypes)]),
     ),
     conversions,
     costPerConversion,

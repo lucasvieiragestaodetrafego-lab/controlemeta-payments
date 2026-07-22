@@ -9,6 +9,8 @@ export interface TrackedActionMetric {
   key: string;
   /** Nome da variável de custo por resultado, ex: {custo_por_compra}. */
   costKey: string;
+  /** Nome da variável de valor gerado (soma de action_values), ex: {valor_compras}. */
+  valueKey: string;
   label: string;
   /** Tipos de ação da Graph API somados para essa métrica (varia conforme a otimização da campanha). */
   actionTypes: string[];
@@ -18,36 +20,42 @@ export const TRACKED_ACTIONS: TrackedActionMetric[] = [
   {
     key: "compras",
     costKey: "custo_por_compra",
+    valueKey: "valor_compras",
     label: "Compras",
     actionTypes: ["purchase", "omni_purchase", "offsite_conversion.fb_pixel_purchase"],
   },
   {
     key: "carrinho",
     costKey: "custo_por_carrinho",
+    valueKey: "valor_carrinho",
     label: "Adicionou ao carrinho",
     actionTypes: ["add_to_cart", "omni_add_to_cart"],
   },
   {
     key: "checkout_iniciado",
     costKey: "custo_por_checkout",
+    valueKey: "valor_checkout",
     label: "Iniciou finalização de compra",
     actionTypes: ["initiate_checkout", "omni_initiated_checkout"],
   },
   {
     key: "cadastros",
     costKey: "custo_por_cadastro",
+    valueKey: "valor_cadastros",
     label: "Cadastros completos",
     actionTypes: ["complete_registration", "omni_complete_registration"],
   },
   {
     key: "leads",
     costKey: "custo_por_lead",
+    valueKey: "valor_leads",
     label: "Leads",
     actionTypes: ["lead", "onsite_conversion.lead_grouped"],
   },
   {
     key: "conversas_iniciadas",
     costKey: "custo_por_conversa",
+    valueKey: "valor_conversas",
     label: "Conversas iniciadas (WhatsApp/Messenger)",
     actionTypes: [
       "onsite_conversion.messaging_conversation_started_7d",
@@ -57,24 +65,28 @@ export const TRACKED_ACTIONS: TrackedActionMetric[] = [
   {
     key: "cliques_link",
     costKey: "custo_por_clique_link",
+    valueKey: "valor_cliques_link",
     label: "Cliques no link",
     actionTypes: ["link_click"],
   },
   {
     key: "visualizacoes_pagina",
     costKey: "custo_por_visualizacao_pagina",
+    valueKey: "valor_visualizacoes_pagina",
     label: "Visualizações da página de destino",
     actionTypes: ["landing_page_view"],
   },
   {
     key: "info_pagamento",
     costKey: "custo_por_info_pagamento",
+    valueKey: "valor_info_pagamento",
     label: "Adicionou informação de pagamento",
     actionTypes: ["add_payment_info", "omni_add_payment_info"],
   },
   {
     key: "instalacoes_app",
     costKey: "custo_por_instalacao",
+    valueKey: "valor_instalacoes_app",
     label: "Instalações do app",
     actionTypes: ["mobile_app_install", "omni_app_install"],
   },
@@ -143,6 +155,13 @@ export const VARIABLE_CATEGORIES: VariableCategory[] = [
     variables: TRACKED_ACTIONS.map((a) => ({
       key: a.costKey,
       label: `Custo por ${a.label.toLowerCase()}`,
+    })),
+  },
+  {
+    name: "Valor gerado por conversão",
+    variables: TRACKED_ACTIONS.map((a) => ({
+      key: a.valueKey,
+      label: `Valor de ${a.label.toLowerCase()}`,
     })),
   },
   {
