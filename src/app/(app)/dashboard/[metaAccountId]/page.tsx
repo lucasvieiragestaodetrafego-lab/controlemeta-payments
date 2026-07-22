@@ -1,12 +1,13 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getDashboardAccount } from "@/lib/dashboard-accounts";
-import { getAccountInsights, type PeriodSelection } from "@/lib/meta-insights";
+import { getAccountInsights, getAccountInsightsDaily, type PeriodSelection } from "@/lib/meta-insights";
 import { TRACKED_ACTIONS } from "@/lib/report-variables";
 import { parsePeriodFromSearchParams, searchParamsToURLSearchParams } from "@/lib/period-params";
 import PeriodSelector from "../PeriodSelector";
 import ResultMetricSelector from "./ResultMetricSelector";
 import KpiCards from "./KpiCards";
+import SpendResultChart from "./SpendResultChart";
 
 export default async function DashboardAccountPage({
   params,
@@ -34,7 +35,10 @@ export default async function DashboardAccountPage({
     TRACKED_ACTIONS.find((a) => a.key === account.resultMetricKey) ??
     TRACKED_ACTIONS[0];
 
-  const insights = await getAccountInsights(metaAccountId, selection);
+  const [insights, daily] = await Promise.all([
+    getAccountInsights(metaAccountId, selection),
+    getAccountInsightsDaily(metaAccountId, selection, resultMetric.actionTypes),
+  ]);
   const resultValue = insights.detailedActions[resultMetric.key] ?? 0;
   const costPerResult = resultValue > 0 ? insights.spend / resultValue : null;
 
@@ -58,6 +62,8 @@ export default async function DashboardAccountPage({
         costPerResult={costPerResult}
         roas={insights.roas}
       />
+
+      <SpendResultChart daily={daily} resultLabel={resultMetric.label} />
     </main>
   );
 }
