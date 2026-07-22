@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getDashboardAccount } from "@/lib/dashboard-accounts";
@@ -9,6 +10,7 @@ import ResultMetricSelector from "./ResultMetricSelector";
 import KpiCards from "./KpiCards";
 import SpendResultChart from "./SpendResultChart";
 import ConversionFunnel from "./ConversionFunnel";
+import CreativeRankingSection from "./CreativeRankingSection";
 
 const CHECKOUT_METRIC = TRACKED_ACTIONS.find((a) => a.key === "checkout_iniciado")!;
 const LINK_CLICKS_METRIC = TRACKED_ACTIONS.find((a) => a.key === "cliques_link")!;
@@ -76,6 +78,10 @@ export default async function DashboardAccountPage({
         resultLabel={resultMetric.label}
         resultValue={resultValue}
       />
+
+      <Suspense fallback={<p className="text-sm text-slate-500">Carregando ranking de criativos…</p>}>
+        <CreativeRankingSection metaAccountId={metaAccountId} selection={selection} resultLabel={resultMetric.label} />
+      </Suspense>
     </main>
   );
 }
