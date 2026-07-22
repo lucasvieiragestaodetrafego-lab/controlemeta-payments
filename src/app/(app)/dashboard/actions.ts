@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { addDashboardAccount, removeDashboardAccount, updateResultMetric } from "@/lib/dashboard-accounts";
+import { updateSelectedMetricKeys } from "@/lib/dashboard-columns";
 
 async function requireAuth() {
   const supabase = await createClient();
@@ -34,4 +35,10 @@ export async function updateResultMetricAction(metaAccountId: string, resultMetr
   await updateResultMetric(metaAccountId, resultMetricKey);
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/${metaAccountId}`);
+}
+
+export async function updateSelectedColumnsAction(keys: string[]): Promise<void> {
+  await requireAuth();
+  await updateSelectedMetricKeys(keys);
+  revalidatePath("/dashboard");
 }
