@@ -4,13 +4,15 @@ export default async function CreativeRankingSection({
   metaAccountId,
   selection,
   resultLabel,
+  resultActionTypes,
 }: {
   metaAccountId: string;
   selection: PeriodSelection;
   resultLabel: string;
+  resultActionTypes: string[];
 }) {
   try {
-    const creatives = await getTopCreatives(metaAccountId, selection, 5);
+    const creatives = await getTopCreatives(metaAccountId, selection, 5, resultActionTypes);
 
     if (creatives.length === 0) {
       return <p className="text-sm text-slate-400">Sem criativos com resultado no período.</p>;

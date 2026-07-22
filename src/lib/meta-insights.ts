@@ -229,18 +229,28 @@ async function getAdPermalink(adId: string): Promise<string | null> {
   }
 }
 
-/** Busca o ranking dos criativos com melhor desempenho no período. */
+/**
+ * Busca o ranking dos criativos com melhor desempenho no período.
+ *
+ * `resultActionTypes`, quando informado, faz o ranking (e o CPA) usarem a
+ * mesma métrica de resultado escolhida pelo usuário no Dashboard — em vez da
+ * prioridade fixa compra → lead → mensagem usada pelos Relatórios de
+ * Métricas (chamada sem esse argumento).
+ */
 export async function getTopCreatives(
   adAccountId: string,
   selection: PeriodSelection | ReportPeriod,
   limit: number,
+  resultActionTypes?: string[],
 ): Promise<CreativeInsight[]> {
   const rows = await fetchInsights(adAccountId, normalizeSelection(selection), "ad");
 
   const creatives: CreativeInsight[] = rows.map((row) => {
     const clicks = Number(row.clicks ?? 0);
     const spend = Number(row.spend ?? 0);
-    const { conversions } = pickConversions(row.actions);
+    const conversions = resultActionTypes
+      ? sumActionValue(row.actions, resultActionTypes)
+      : pickConversions(row.actions).conversions;
     return {
       adId: row.ad_id ?? "",
       adName: row.ad_name ?? "—",

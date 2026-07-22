@@ -80,7 +80,12 @@ export default async function DashboardAccountPage({
       />
 
       <Suspense fallback={<p className="text-sm text-slate-500">Carregando ranking de criativos…</p>}>
-        <CreativeRankingSection metaAccountId={metaAccountId} selection={selection} resultLabel={resultMetric.label} />
+        <CreativeRankingSection
+          metaAccountId={metaAccountId}
+          selection={selection}
+          resultLabel={resultMetric.label}
+          resultActionTypes={resultMetric.actionTypes}
+        />
       </Suspense>
     </main>
   );
