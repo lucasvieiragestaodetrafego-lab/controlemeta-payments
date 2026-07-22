@@ -3,12 +3,16 @@ export interface InsightAction {
   value: string;
 }
 
-/** Soma os valores de `actions`/`action_values` cujo tipo está em `types`. */
-export function sumActionValue(actions: InsightAction[] | undefined, types: string[]): number {
+/**
+ * Soma os valores de `actions`/`action_values`. Com `types` informado (e não
+ * vazio), soma só as entradas desses tipos; sem `types`, soma tudo — usado
+ * pelos campos de vídeo/engajamento da Graph API que já vêm com um único
+ * tipo relevante por campo (ex: `video_play_actions`).
+ */
+export function sumActionValue(actions: InsightAction[] | undefined, types?: string[]): number {
   if (!actions) return 0;
-  return actions
-    .filter((a) => types.includes(a.action_type))
-    .reduce((sum, a) => sum + Number(a.value), 0);
+  const relevant = types && types.length > 0 ? actions.filter((a) => types.includes(a.action_type)) : actions;
+  return relevant.reduce((sum, a) => sum + Number(a.value), 0);
 }
 
 /** ROAS: valor gerado pelas conversões dividido pelo investimento. */

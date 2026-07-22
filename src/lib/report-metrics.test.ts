@@ -22,6 +22,15 @@ describe("sumActionValue", () => {
     expect(sumActionValue(undefined, ["purchase"])).toBe(0);
     expect(sumActionValue([{ action_type: "lead", value: "10" }], ["purchase"])).toBe(0);
   });
+
+  it("soma todos os valores quando nenhum tipo é informado", () => {
+    const actions = [
+      { action_type: "video_view", value: "10" },
+      { action_type: "video_view", value: "7" },
+    ];
+    expect(sumActionValue(actions)).toBe(17);
+    expect(sumActionValue(actions, [])).toBe(17);
+  });
 });
 
 describe("computeRoas", () => {
