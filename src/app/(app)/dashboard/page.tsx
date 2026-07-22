@@ -5,6 +5,7 @@ import { getAccountInsights, type PeriodSelection } from "@/lib/meta-insights";
 import { TRACKED_ACTIONS } from "@/lib/report-variables";
 import { parsePeriodFromSearchParams, searchParamsToURLSearchParams } from "@/lib/period-params";
 import DashboardOverviewTable, { type OverviewRow } from "./DashboardOverviewTable";
+import PeriodSelector from "./PeriodSelector";
 
 const BATCH_SIZE = 10;
 
@@ -66,11 +67,12 @@ export default async function DashboardPage({
 
   return (
     <main className="mx-auto max-w-[1600px] p-6">
-      <header className="mb-6 flex items-center justify-between">
+      <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">Dashboard</h1>
           <p className="text-sm text-slate-400">Métricas em tempo real das contas Meta Ads.</p>
         </div>
+        <PeriodSelector selection={selection} />
       </header>
       <DashboardOverviewTable rows={rows} />
     </main>
