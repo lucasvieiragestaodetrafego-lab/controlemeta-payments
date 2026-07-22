@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { listDashboardAccounts } from "@/lib/dashboard-accounts";
 import { getAccountInsights, type PeriodSelection } from "@/lib/meta-insights";
@@ -6,6 +7,8 @@ import { TRACKED_ACTIONS } from "@/lib/report-variables";
 import { parsePeriodFromSearchParams, searchParamsToURLSearchParams } from "@/lib/period-params";
 import DashboardOverviewTable, { type OverviewRow } from "./DashboardOverviewTable";
 import PeriodSelector from "./PeriodSelector";
+import ManageAccountsButton from "./ManageAccountsButton";
+import ManageAccountsSection from "./ManageAccountsSection";
 
 const BATCH_SIZE = 10;
 
@@ -72,7 +75,14 @@ export default async function DashboardPage({
           <h1 className="text-xl font-semibold">Dashboard</h1>
           <p className="text-sm text-slate-400">Métricas em tempo real das contas Meta Ads.</p>
         </div>
-        <PeriodSelector selection={selection} />
+        <div className="flex items-center gap-3">
+          <PeriodSelector selection={selection} />
+          <ManageAccountsButton>
+            <Suspense fallback={<p className="text-sm text-slate-500">Carregando contas…</p>}>
+              <ManageAccountsSection />
+            </Suspense>
+          </ManageAccountsButton>
+        </div>
       </header>
       <DashboardOverviewTable rows={rows} />
     </main>
