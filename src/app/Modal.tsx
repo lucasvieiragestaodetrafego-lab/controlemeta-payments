@@ -7,11 +7,13 @@ export default function Modal({
   onClose,
   title,
   children,
+  widthClassName = "max-w-2xl",
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  widthClassName?: string;
 }) {
   useEffect(() => {
     if (!open) return;
@@ -30,7 +32,7 @@ export default function Modal({
       onClick={onClose}
     >
       <div
-        className="mt-10 w-full max-w-2xl rounded-lg border border-slate-800 bg-slate-900 p-5 shadow-xl"
+        className={`mt-10 w-full ${widthClassName} rounded-lg border border-slate-800 bg-slate-900 p-5 shadow-xl`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
