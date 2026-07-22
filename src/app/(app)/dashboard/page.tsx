@@ -2,13 +2,16 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { listDashboardAccounts } from "@/lib/dashboard-accounts";
-import { getAccountInsights, type PeriodSelection } from "@/lib/meta-insights";
+import { getAccountInsights, getAccountMetricValues, type PeriodSelection } from "@/lib/meta-insights";
 import { TRACKED_ACTIONS } from "@/lib/report-variables";
+import { getSelectedMetricKeys } from "@/lib/dashboard-columns";
+import { findMetric } from "@/lib/metrics-catalog";
 import { parsePeriodFromSearchParams, searchParamsToURLSearchParams } from "@/lib/period-params";
 import DashboardOverviewTable, { type OverviewRow } from "./DashboardOverviewTable";
 import PeriodSelector from "./PeriodSelector";
 import ManageAccountsButton from "./ManageAccountsButton";
 import ManageAccountsSection from "./ManageAccountsSection";
+import ColumnPickerButton from "./ColumnPickerButton";
 
 const BATCH_SIZE = 10;
 
@@ -27,6 +30,8 @@ export default async function DashboardPage({
   const selection: PeriodSelection = parsePeriodFromSearchParams(searchParamsToURLSearchParams(sp));
 
   const accounts = await listDashboardAccounts();
+  const selectedMetricKeys = await getSelectedMetricKeys();
+  const extraColumns = selectedMetricKeys.map(findMetric).filter((m) => m != null);
 
   const rows: OverviewRow[] = [];
   for (let i = 0; i < accounts.length; i += BATCH_SIZE) {
@@ -35,7 +40,10 @@ export default async function DashboardPage({
       batch.map(async (account): Promise<OverviewRow> => {
         const resultMetric = TRACKED_ACTIONS.find((a) => a.key === account.resultMetricKey);
         try {
-          const insights = await getAccountInsights(account.metaAccountId, selection);
+          const [insights, extraMetrics] = await Promise.all([
+            getAccountInsights(account.metaAccountId, selection),
+            getAccountMetricValues(account.metaAccountId, selection, selectedMetricKeys),
+          ]);
           const resultValue = resultMetric
             ? insights.detailedActions[resultMetric.key] ?? 0
             : insights.conversions;
@@ -48,6 +56,7 @@ export default async function DashboardPage({
             resultValue,
             costPerResult: resultValue > 0 ? insights.spend / resultValue : null,
             roas: insights.roas,
+            extraMetrics,
             error: null,
           };
         } catch (err) {
@@ -60,6 +69,7 @@ export default async function DashboardPage({
             resultValue: 0,
             costPerResult: null,
             roas: null,
+            extraMetrics: {},
             error: err instanceof Error ? err.message : "Erro ao buscar métricas.",
           };
         }
@@ -77,6 +87,7 @@ export default async function DashboardPage({
         </div>
         <div className="flex items-center gap-3">
           <PeriodSelector selection={selection} />
+          <ColumnPickerButton selectedKeys={selectedMetricKeys} />
           <ManageAccountsButton>
             <Suspense fallback={<p className="text-sm text-slate-500">Carregando contas…</p>}>
               <ManageAccountsSection />
@@ -84,7 +95,7 @@ export default async function DashboardPage({
           </ManageAccountsButton>
         </div>
       </header>
-      <DashboardOverviewTable rows={rows} />
+      <DashboardOverviewTable rows={rows} extraColumns={extraColumns} />
     </main>
   );
 }
