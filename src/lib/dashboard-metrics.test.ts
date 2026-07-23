@@ -189,6 +189,23 @@ describe("extractMetricValue com rollup por objetivo", () => {
     expect(extractMetricValue(row, metric)).toBe(2.5);
   });
 
+  it("roas com rollup presente mas sem entrada compras retorna null (nao cai pra linha da conta)", () => {
+    const rollupSemCompras: ObjectiveRollup = {
+      distinctActionKeys: ["leads"],
+      byActionKey: { leads: { spend: 100, count: 5, value: 0 } },
+    };
+    const metric: MetricDefinition = {
+      key: "roas_compras",
+      label: "ROAS das compras",
+      category: "ROAS e ticket médio",
+      valueKind: "decimal",
+      source: { kind: "roas", actionTypes: ["purchase"] },
+    };
+    // Linha da conta tem valor de compra alto — a versão antiga (buggy) teria caído aqui e retornado um número; o comportamento correto é null.
+    const row: GraphInsightRow = { spend: "500", action_values: [{ action_type: "purchase", value: "5000" }] };
+    expect(extractMetricValue(row, metric, rollupSemCompras)).toBeNull();
+  });
+
   it("kind pseudo sempre retorna null e não exige nenhum campo da Graph API", () => {
     const metric: MetricDefinition = {
       key: "resultado",

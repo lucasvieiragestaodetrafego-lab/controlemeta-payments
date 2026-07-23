@@ -82,8 +82,10 @@ export function extractMetricValue(
       return denominator > 0 ? (numerator / denominator) * source.multiplier : null;
     }
     case "roas": {
-      const comprasRollup = rollup?.byActionKey["compras"];
-      if (comprasRollup) return computeRoas(comprasRollup.spend, comprasRollup.value);
+      if (rollup) {
+        const comprasRollup = rollup.byActionKey["compras"];
+        return comprasRollup ? computeRoas(comprasRollup.spend, comprasRollup.value) : null;
+      }
       const spend = resolveFieldValue(row, "spend");
       const value = resolveFieldValue(row, "action_values", source.actionTypes);
       return computeRoas(spend, value);
