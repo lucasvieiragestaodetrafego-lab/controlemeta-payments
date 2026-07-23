@@ -7,6 +7,7 @@ import {
   type GraphInsightRow,
 } from "./dashboard-metrics";
 import type { MetricDefinition } from "./metrics-catalog";
+import type { ObjectiveRollup } from "./ad-set-objectives";
 
 describe("resolveFieldValue", () => {
   it("lê um campo escalar", () => {
@@ -115,5 +116,88 @@ describe("extractMetricValues", () => {
     const row: GraphInsightRow = { reach: "10", impressions: "100" };
     const result = extractMetricValues(row, ["alcance", "chave_inexistente"]);
     expect(result).toEqual({ alcance: 10 });
+  });
+});
+
+describe("extractMetricValue com rollup por objetivo", () => {
+  const rollup: ObjectiveRollup = {
+    distinctActionKeys: ["leads", "compras"],
+    byActionKey: {
+      leads: { spend: 100, count: 5, value: 0 },
+      compras: { spend: 300, count: 3, value: 900 },
+    },
+  };
+
+  it("cost_per com objectiveKey usa o rollup em vez da linha da conta", () => {
+    const metric: MetricDefinition = {
+      key: "custo_por_lead",
+      label: "Custo por lead",
+      category: "Conversões",
+      valueKind: "currency",
+      source: { kind: "cost_per", countField: "actions", countActionTypes: ["lead"], objectiveKey: "leads" },
+    };
+    // Linha da conta traria um gasto/contagem bem diferentes do rollup — confirma que o rollup vence.
+    const row: GraphInsightRow = { spend: "99999", actions: [{ action_type: "lead", value: "1" }] };
+    expect(extractMetricValue(row, metric, rollup)).toBe(20); // 100 / 5
+  });
+
+  it("cost_per com objectiveKey mas chave ausente do rollup retorna null", () => {
+    const metric: MetricDefinition = {
+      key: "custo_por_cadastro",
+      label: "Custo por cadastro",
+      category: "Conversões",
+      valueKind: "currency",
+      source: { kind: "cost_per", countField: "actions", countActionTypes: ["complete_registration"], objectiveKey: "cadastros" },
+    };
+    const row: GraphInsightRow = { spend: "50", actions: [] };
+    expect(extractMetricValue(row, metric, rollup)).toBeNull();
+  });
+
+  it("cost_per sem objectiveKey ignora o rollup e usa a linha da conta (comportamento antigo)", () => {
+    const metric: MetricDefinition = {
+      key: "cpm",
+      label: "CPM",
+      category: "Distribuição",
+      valueKind: "currency",
+      source: { kind: "cost_per", countField: "impressions" },
+    };
+    const row: GraphInsightRow = { spend: "40", impressions: "2000" };
+    expect(extractMetricValue(row, metric, rollup)).toBe(0.02);
+  });
+
+  it("roas sempre usa o rollup da chave compras quando disponível", () => {
+    const metric: MetricDefinition = {
+      key: "roas_compras",
+      label: "ROAS das compras",
+      category: "ROAS e ticket médio",
+      valueKind: "decimal",
+      source: { kind: "roas", actionTypes: ["purchase"] },
+    };
+    const row: GraphInsightRow = { spend: "99999", action_values: [{ action_type: "purchase", value: "1" }] };
+    expect(extractMetricValue(row, metric, rollup)).toBe(3); // 900 / 300
+  });
+
+  it("roas sem rollup cai pro cálculo antigo a partir da linha da conta", () => {
+    const metric: MetricDefinition = {
+      key: "roas_compras",
+      label: "ROAS das compras",
+      category: "ROAS e ticket médio",
+      valueKind: "decimal",
+      source: { kind: "roas", actionTypes: ["purchase"] },
+    };
+    const row: GraphInsightRow = { spend: "100", action_values: [{ action_type: "purchase", value: "250" }] };
+    expect(extractMetricValue(row, metric)).toBe(2.5);
+  });
+
+  it("kind pseudo sempre retorna null e não exige nenhum campo da Graph API", () => {
+    const metric: MetricDefinition = {
+      key: "resultado",
+      label: "Resultado",
+      category: "Resultados e investimento",
+      valueKind: "count",
+      source: { kind: "pseudo" },
+    };
+    expect(extractMetricValue({}, metric)).toBeNull();
+    expect(buildMetricFields(["resultado"], [metric])).toEqual(["spend"]);
   });
 });

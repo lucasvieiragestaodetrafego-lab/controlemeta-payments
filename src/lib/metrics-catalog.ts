@@ -12,7 +12,13 @@ export type MetricValueKind = "count" | "currency" | "decimal" | "percent";
 export type MetricSource =
   | { kind: "scalar"; field: string }
   | { kind: "action_sum"; field: string; actionTypes?: string[] }
-  | { kind: "cost_per"; countField: string; countActionTypes?: string[] }
+  | {
+      kind: "cost_per";
+      countField: string;
+      countActionTypes?: string[];
+      /** Quando presente, essa métrica usa o rollup por objetivo de conjunto de anúncios (gasto+contagem só dos conjuntos com esse objetivo) em vez do rollup da conta inteira. Chave de ObjectiveRollup.byActionKey (ad-set-objectives.ts). */
+      objectiveKey?: string;
+    }
   | {
       kind: "rate";
       numeratorField: string;
@@ -22,7 +28,8 @@ export type MetricSource =
       multiplier: number;
     }
   | { kind: "roas"; actionTypes: string[] }
-  | { kind: "ticket_medio"; actionTypes: string[] };
+  | { kind: "ticket_medio"; actionTypes: string[] }
+  | { kind: "pseudo" };
 
 export interface MetricDefinition {
   key: string;

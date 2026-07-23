@@ -3,6 +3,7 @@
 // uma linha crua de /insights. Módulo puro — sem fetch — testável sem rede.
 import { sumActionValue, computeRoas, computeTicketMedio, type InsightAction } from "./report-metrics";
 import { findMetric, type MetricDefinition, type MetricSource } from "./metrics-catalog";
+import type { ObjectiveRollup } from "./ad-set-objectives";
 
 export type GraphInsightRow = Record<string, string | InsightAction[] | undefined>;
 
@@ -20,13 +21,15 @@ function fieldsForSource(source: MetricSource): string[] {
     case "action_sum":
       return [source.field];
     case "cost_per":
-      return ["spend", source.countField];
+      return source.objectiveKey ? [] : ["spend", source.countField];
     case "rate":
       return [source.numeratorField, source.denominatorField];
     case "roas":
       return ["actions", "action_values"];
     case "ticket_medio":
       return ["actions", "action_values"];
+    case "pseudo":
+      return [];
   }
 }
 
@@ -45,8 +48,18 @@ export function buildMetricFields(metricKeys: string[], catalog?: MetricDefiniti
   return [...fields];
 }
 
-/** Extrai o valor de uma métrica específica de uma linha crua. Retorna null quando o denominador/contagem é 0 (evita divisão por zero). */
-export function extractMetricValue(row: GraphInsightRow, metric: MetricDefinition): number | null {
+/**
+ * Extrai o valor de uma métrica específica de uma linha crua. Retorna null
+ * quando o denominador/contagem é 0 (evita divisão por zero). Quando
+ * `rollup` é informado e a métrica é `cost_per` com `objectiveKey` (ou
+ * `roas`), usa o rollup por objetivo de conjunto de anúncios em vez da
+ * linha da conta inteira — ver ad-set-objectives.ts.
+ */
+export function extractMetricValue(
+  row: GraphInsightRow,
+  metric: MetricDefinition,
+  rollup?: ObjectiveRollup,
+): number | null {
   const { source } = metric;
   switch (source.kind) {
     case "scalar":
@@ -54,6 +67,11 @@ export function extractMetricValue(row: GraphInsightRow, metric: MetricDefinitio
     case "action_sum":
       return resolveFieldValue(row, source.field, source.actionTypes);
     case "cost_per": {
+      if (source.objectiveKey) {
+        const entry = rollup?.byActionKey[source.objectiveKey];
+        if (!entry || entry.count <= 0) return null;
+        return entry.spend / entry.count;
+      }
       const spend = resolveFieldValue(row, "spend");
       const count = resolveFieldValue(row, source.countField, source.countActionTypes);
       return count > 0 ? spend / count : null;
@@ -64,6 +82,8 @@ export function extractMetricValue(row: GraphInsightRow, metric: MetricDefinitio
       return denominator > 0 ? (numerator / denominator) * source.multiplier : null;
     }
     case "roas": {
+      const comprasRollup = rollup?.byActionKey["compras"];
+      if (comprasRollup) return computeRoas(comprasRollup.spend, comprasRollup.value);
       const spend = resolveFieldValue(row, "spend");
       const value = resolveFieldValue(row, "action_values", source.actionTypes);
       return computeRoas(spend, value);
@@ -73,16 +93,22 @@ export function extractMetricValue(row: GraphInsightRow, metric: MetricDefinitio
       const value = resolveFieldValue(row, "action_values", source.actionTypes);
       return computeTicketMedio(value, count);
     }
+    case "pseudo":
+      return null;
   }
 }
 
 /** Extrai todas as métricas pedidas de uma linha crua. Chaves desconhecidas no catálogo são ignoradas silenciosamente. */
-export function extractMetricValues(row: GraphInsightRow, metricKeys: string[]): Record<string, number | null> {
+export function extractMetricValues(
+  row: GraphInsightRow,
+  metricKeys: string[],
+  rollup?: ObjectiveRollup,
+): Record<string, number | null> {
   const result: Record<string, number | null> = {};
   for (const key of metricKeys) {
     const metric = findMetric(key);
     if (!metric) continue;
-    result[key] = extractMetricValue(row, metric);
+    result[key] = extractMetricValue(row, metric, rollup);
   }
   return result;
 }
