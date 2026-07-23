@@ -1,5 +1,5 @@
 // src/lib/meta-insights.ts
-import { graphGet, graphGetAll } from "./meta";
+import { graphGet, graphGetAll, getAccountAdSetObjectives } from "./meta";
 import {
   sumActionValue,
   computeRoas,
@@ -10,6 +10,7 @@ import {
 } from "./report-metrics";
 import { TRACKED_ACTIONS } from "./report-variables";
 import { buildMetricFields, extractMetricValues, type GraphInsightRow } from "./dashboard-metrics";
+import { computeObjectiveRollups, type AdSetInsightRow, type ObjectiveRollup } from "./ad-set-objectives";
 
 export type ReportPeriod = "today" | "last_7_days" | "last_30_days" | "current_month";
 
@@ -319,4 +320,52 @@ export async function getAccountMetricValues(
   const params: Record<string, string> = { fields, ...buildPeriodParams(normalizeSelection(selection)) };
   const rows = await graphGetAll<GraphInsightRow>(`/${adAccountId}/insights`, params);
   return extractMetricValues(rows[0] ?? {}, metricKeys);
+}
+
+/** Mapa chave de TRACKED_ACTIONS -> tipos de ação da Graph API, usado pra agregar o rollup por objetivo. */
+const ACTION_TYPES_BY_TRACKED_KEY: Record<string, string[]> = Object.fromEntries(
+  TRACKED_ACTIONS.map((a) => [a.key, a.actionTypes]),
+);
+
+/**
+ * Busca gasto/ações por conjunto de anúncios no período selecionado —
+ * conjuntos sem gasto no período simplesmente não aparecem no resultado.
+ */
+async function fetchAdSetInsightRows(
+  adAccountId: string,
+  selection: PeriodSelection,
+): Promise<AdSetInsightRow[]> {
+  const params: Record<string, string> = {
+    fields: "adset_id,spend,actions,action_values",
+    level: "adset",
+    ...buildPeriodParams(selection),
+  };
+  const rows = await graphGetAll<{ adset_id?: string; spend?: string; actions?: InsightAction[]; action_values?: InsightAction[] }>(
+    `/${adAccountId}/insights`,
+    params,
+  );
+  return rows.map((row) => ({
+    adSetId: row.adset_id ?? "",
+    spend: Number(row.spend ?? 0),
+    actions: row.actions ?? [],
+    actionValues: row.action_values ?? [],
+  }));
+}
+
+/**
+ * Busca o rollup de gasto/resultado por objetivo de conjunto de anúncios
+ * pra uma conta no período informado — usado pra filtrar as métricas
+ * "custo por X"/ROAS por objetivo e pra detectar objetivo misto no
+ * Resultado/Custo por resultado.
+ */
+export async function getAccountObjectiveRollup(
+  adAccountId: string,
+  selection: PeriodSelection | ReportPeriod,
+): Promise<ObjectiveRollup> {
+  const normalized = normalizeSelection(selection);
+  const [adSets, insightRows] = await Promise.all([
+    getAccountAdSetObjectives(adAccountId),
+    fetchAdSetInsightRows(adAccountId, normalized),
+  ]);
+  return computeObjectiveRollups(adSets, insightRows, ACTION_TYPES_BY_TRACKED_KEY);
 }
