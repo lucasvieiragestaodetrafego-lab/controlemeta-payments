@@ -2,7 +2,13 @@ import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getDashboardAccount } from "@/lib/dashboard-accounts";
-import { getAccountInsights, getAccountInsightsDaily, type PeriodSelection } from "@/lib/meta-insights";
+import {
+  getAccountInsights,
+  getAccountInsightsDaily,
+  getAccountObjectiveRollup,
+  type PeriodSelection,
+} from "@/lib/meta-insights";
+import { computeRoas } from "@/lib/report-metrics";
 import { TRACKED_ACTIONS } from "@/lib/report-variables";
 import { parsePeriodFromSearchParams, searchParamsToURLSearchParams } from "@/lib/period-params";
 import PeriodSelector from "../PeriodSelector";
@@ -41,12 +47,17 @@ export default async function DashboardAccountPage({
     TRACKED_ACTIONS.find((a) => a.key === account.resultMetricKey) ??
     TRACKED_ACTIONS[0];
 
-  const [insights, daily] = await Promise.all([
+  const [insights, daily, rollup] = await Promise.all([
     getAccountInsights(metaAccountId, selection),
     getAccountInsightsDaily(metaAccountId, selection, resultMetric.actionTypes),
+    getAccountObjectiveRollup(metaAccountId, selection),
   ]);
-  const resultValue = insights.detailedActions[resultMetric.key] ?? 0;
-  const costPerResult = resultValue > 0 ? insights.spend / resultValue : null;
+  const isMixedObjective = rollup.distinctActionKeys.length > 1;
+  const resultEntry = rollup.byActionKey[resultMetric.key];
+  const resultValue = !isMixedObjective && resultEntry ? resultEntry.count : null;
+  const costPerResult = !isMixedObjective && resultEntry && resultEntry.count > 0 ? resultEntry.spend / resultEntry.count : null;
+  const comprasEntry = rollup.byActionKey["compras"];
+  const roas = comprasEntry ? computeRoas(comprasEntry.spend, comprasEntry.value) : null;
 
   return (
     <main className="mx-auto max-w-[1600px] p-6">
@@ -66,7 +77,7 @@ export default async function DashboardAccountPage({
         resultLabel={resultMetric.label}
         resultValue={resultValue}
         costPerResult={costPerResult}
-        roas={insights.roas}
+        roas={roas}
       />
 
       <SpendResultChart daily={daily} resultLabel={resultMetric.label} />
@@ -76,7 +87,7 @@ export default async function DashboardAccountPage({
         linkClicks={insights.detailedActions[LINK_CLICKS_METRIC.key] ?? 0}
         checkouts={insights.detailedActions[CHECKOUT_METRIC.key] ?? 0}
         resultLabel={resultMetric.label}
-        resultValue={resultValue}
+        resultValue={resultValue ?? 0}
       />
 
       <Suspense fallback={<p className="text-sm text-slate-500">Carregando ranking de criativos…</p>}>
