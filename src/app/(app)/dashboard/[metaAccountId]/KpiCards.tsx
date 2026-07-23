@@ -9,13 +9,13 @@ export default function KpiCards({
 }: {
   spend: number;
   resultLabel: string;
-  resultValue: number;
+  resultValue: number | null;
   costPerResult: number | null;
   roas: number | null;
 }) {
   const cards = [
     { label: "Gasto", value: currencyFmt(spend) },
-    { label: resultLabel, value: String(resultValue) },
+    { label: resultLabel, value: resultValue != null ? String(resultValue) : "—" },
     { label: "Custo por resultado", value: costPerResult != null ? currencyFmt(costPerResult) : "—" },
     { label: "ROAS", value: roas != null ? roas.toLocaleString("pt-BR", { minimumFractionDigits: 2 }) : "—" },
   ];
