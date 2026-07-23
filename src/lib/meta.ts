@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { mapOptimizationGoalToActionKey, type AdSetObjective } from "./ad-set-objectives";
 
 const GRAPH_BASE = "https://graph.facebook.com";
 
@@ -160,3 +161,29 @@ export const listBusinessAdAccountsCached = unstable_cache(
   ["business-ad-accounts"],
   { revalidate: 1800 },
 );
+
+interface RawAdSet {
+  id: string;
+  optimization_goal?: string;
+  promoted_object?: { custom_event_type?: string };
+}
+
+/**
+ * Busca todos os conjuntos de anúncios da conta com seu objetivo de
+ * otimização já mapeado pra uma chave de TRACKED_ACTIONS. Não filtra por
+ * status — um conjunto pausado hoje mas que gastou no período selecionado
+ * ainda precisa aparecer aqui pra não perder o gasto dele no rollup por
+ * objetivo (quem decide "só conta quem gastou no período" é o cruzamento
+ * com os insights por conjunto, não o status atual).
+ */
+export async function getAccountAdSetObjectives(adAccountId: string): Promise<AdSetObjective[]> {
+  const rows = await graphGetAll<RawAdSet>(`/${adAccountId}/adsets`, {
+    fields: "id,optimization_goal,promoted_object{custom_event_type}",
+  });
+  return rows.map((row) => ({
+    adSetId: row.id,
+    actionKey: row.optimization_goal
+      ? mapOptimizationGoalToActionKey(row.optimization_goal, row.promoted_object?.custom_event_type)
+      : null,
+  }));
+}
