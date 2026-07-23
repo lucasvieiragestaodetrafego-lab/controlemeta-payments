@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getDashboardAccount } from "@/lib/dashboard-accounts";
+import { getDashboardAccount, listDashboardAccounts } from "@/lib/dashboard-accounts";
+import AccountSwitcher from "./AccountSwitcher";
 import {
   getAccountInsights,
   getAccountInsightsDaily,
@@ -35,7 +36,10 @@ export default async function DashboardAccountPage({
   if (!user) redirect("/login");
 
   const { metaAccountId } = await params;
-  const account = await getDashboardAccount(metaAccountId);
+  const [account, allAccounts] = await Promise.all([
+    getDashboardAccount(metaAccountId),
+    listDashboardAccounts(),
+  ]);
   if (!account) notFound();
 
   const sp = await searchParams;
@@ -63,7 +67,13 @@ export default async function DashboardAccountPage({
     <main className="mx-auto max-w-[1600px] p-6">
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">{account.accountName}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-semibold">{account.accountName}</h1>
+            <AccountSwitcher
+              accounts={allAccounts.map((a) => ({ metaAccountId: a.metaAccountId, accountName: a.accountName }))}
+              currentMetaAccountId={metaAccountId}
+            />
+          </div>
           <p className="text-sm text-slate-400">Dashboard de métricas em tempo real.</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
