@@ -314,12 +314,13 @@ export async function getAccountMetricValues(
   adAccountId: string,
   selection: PeriodSelection | ReportPeriod,
   metricKeys: string[],
+  rollup?: ObjectiveRollup,
 ): Promise<Record<string, number | null>> {
   if (metricKeys.length === 0) return {};
   const fields = buildMetricFields(metricKeys).join(",");
   const params: Record<string, string> = { fields, ...buildPeriodParams(normalizeSelection(selection)) };
   const rows = await graphGetAll<GraphInsightRow>(`/${adAccountId}/insights`, params);
-  return extractMetricValues(rows[0] ?? {}, metricKeys);
+  return extractMetricValues(rows[0] ?? {}, metricKeys, rollup);
 }
 
 /** Mapa chave de TRACKED_ACTIONS -> tipos de ação da Graph API, usado pra agregar o rollup por objetivo. */
