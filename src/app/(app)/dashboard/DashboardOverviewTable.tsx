@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { sortOverviewRows, type OverviewSortKey } from "@/lib/dashboard-sort";
+import { sortOverviewRows } from "@/lib/dashboard-sort";
 import { formatMetricValue } from "@/lib/metric-format";
 import type { MetricDefinition } from "@/lib/metrics-catalog";
 
@@ -10,39 +10,26 @@ export interface OverviewRow {
   id: string;
   metaAccountId: string;
   name: string;
-  spend: number;
-  resultLabel: string;
-  resultValue: number;
-  costPerResult: number | null;
-  roas: number | null;
-  /** Valores das colunas extras selecionadas pelo usuário (Task 10), por chave do catálogo. Vazio quando nenhuma coluna extra está selecionada. */
-  extraMetrics: Record<string, number | null>;
+  /** Valor de cada coluna selecionada, por chave do catálogo. */
+  values: Record<string, number | null>;
+  /** Rótulo dinâmico por coluna quando difere do label padrão (ex: "Resultado" mostra o nome da métrica escolhida pela conta, tipo "Compras"). */
+  valueLabels?: Record<string, string>;
   error: string | null;
 }
 
-const currencyFmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
-const COLUMNS: { key: OverviewSortKey; label: string }[] = [
-  { key: "name", label: "Conta" },
-  { key: "spend", label: "Gasto" },
-  { key: "resultValue", label: "Resultado" },
-  { key: "costPerResult", label: "Custo por resultado" },
-  { key: "roas", label: "ROAS" },
-];
-
 export default function DashboardOverviewTable({
   rows,
-  extraColumns,
+  columns,
 }: {
   rows: OverviewRow[];
-  extraColumns: MetricDefinition[];
+  columns: MetricDefinition[];
 }) {
-  const [sortKey, setSortKey] = useState<OverviewSortKey>("spend");
+  const [sortKey, setSortKey] = useState<string>("gasto");
   const [direction, setDirection] = useState<"asc" | "desc">("desc");
 
   const sorted = useMemo(() => sortOverviewRows(rows, sortKey, direction), [rows, sortKey, direction]);
 
-  function toggleSort(key: OverviewSortKey) {
+  function toggleSort(key: string) {
     if (key === sortKey) {
       setDirection((d) => (d === "asc" ? "desc" : "asc"));
     } else {
@@ -63,18 +50,16 @@ export default function DashboardOverviewTable({
     <table className="w-full text-left text-sm">
       <thead className="text-slate-400">
         <tr>
-          {COLUMNS.map((col) => (
+          <th className="cursor-pointer select-none px-4 py-2" onClick={() => toggleSort("name")}>
+            Conta {sortKey === "name" ? (direction === "asc" ? "▲" : "▼") : ""}
+          </th>
+          {columns.map((col) => (
             <th
               key={col.key}
               className="cursor-pointer select-none px-4 py-2"
               onClick={() => toggleSort(col.key)}
             >
               {col.label} {sortKey === col.key ? (direction === "asc" ? "▲" : "▼") : ""}
-            </th>
-          ))}
-          {extraColumns.map((col) => (
-            <th key={col.key} className="px-4 py-2">
-              {col.label}
             </th>
           ))}
         </tr>
@@ -88,27 +73,18 @@ export default function DashboardOverviewTable({
               </Link>
             </td>
             {row.error ? (
-              <td colSpan={4 + extraColumns.length} className="px-4 py-2 text-xs text-red-400">
+              <td colSpan={columns.length} className="px-4 py-2 text-xs text-red-400">
                 {row.error}
               </td>
             ) : (
-              <>
-                <td className="px-4 py-2">{currencyFmt(row.spend)}</td>
-                <td className="px-4 py-2">
-                  {row.resultValue} <span className="text-xs text-slate-500">{row.resultLabel}</span>
+              columns.map((col) => (
+                <td key={col.key} className="px-4 py-2">
+                  {formatMetricValue(row.values[col.key] ?? null, col.valueKind)}
+                  {row.valueLabels?.[col.key] && (
+                    <span className="ml-1 text-xs text-slate-500">{row.valueLabels[col.key]}</span>
+                  )}
                 </td>
-                <td className="px-4 py-2">
-                  {row.costPerResult != null ? currencyFmt(row.costPerResult) : "—"}
-                </td>
-                <td className="px-4 py-2">
-                  {row.roas != null ? row.roas.toLocaleString("pt-BR", { minimumFractionDigits: 2 }) : "—"}
-                </td>
-                {extraColumns.map((col) => (
-                  <td key={col.key} className="px-4 py-2">
-                    {formatMetricValue(row.extraMetrics[col.key] ?? null, col.valueKind)}
-                  </td>
-                ))}
-              </>
+              ))
             )}
           </tr>
         ))}
