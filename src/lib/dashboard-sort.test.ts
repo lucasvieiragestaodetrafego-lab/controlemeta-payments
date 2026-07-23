@@ -1,20 +1,19 @@
-// src/lib/dashboard-sort.test.ts
 import { describe, it, expect } from "vitest";
-import { sortOverviewRows } from "./dashboard-sort";
+import { sortOverviewRows, type SortableRow } from "./dashboard-sort";
 
-const rows = [
-  { name: "Conta C", spend: 300, resultValue: 10, costPerResult: 30, roas: 1.5 },
-  { name: "Conta A", spend: 100, resultValue: 5, costPerResult: 20, roas: null },
-  { name: "Conta B", spend: 200, resultValue: 8, costPerResult: null, roas: 3 },
+const rows: SortableRow[] = [
+  { name: "Conta C", values: { spend: 300, resultValue: 10, roas: 1.5 } },
+  { name: "Conta A", values: { spend: 100, resultValue: 5, roas: null } },
+  { name: "Conta B", values: { spend: 200, resultValue: 8, roas: 3 } },
 ];
 
 describe("sortOverviewRows", () => {
-  it("ordena numericamente por gasto, decrescente", () => {
+  it("ordena numericamente por uma chave de values, decrescente", () => {
     const result = sortOverviewRows(rows, "spend", "desc");
     expect(result.map((r) => r.name)).toEqual(["Conta C", "Conta B", "Conta A"]);
   });
 
-  it("ordena alfabeticamente por nome, crescente", () => {
+  it("ordena alfabeticamente por name, crescente", () => {
     const result = sortOverviewRows(rows, "name", "asc");
     expect(result.map((r) => r.name)).toEqual(["Conta A", "Conta B", "Conta C"]);
   });
@@ -30,5 +29,24 @@ describe("sortOverviewRows", () => {
     const copy = [...rows];
     sortOverviewRows(rows, "spend", "asc");
     expect(rows).toEqual(copy);
+  });
+
+  it("ordena por qualquer chave dinâmica presente em values (ex: uma coluna do catálogo)", () => {
+    const dynamicRows: SortableRow[] = [
+      { name: "X", values: { video_p25: 40 } },
+      { name: "Y", values: { video_p25: 10 } },
+      { name: "Z", values: { video_p25: 25 } },
+    ];
+    const result = sortOverviewRows(dynamicRows, "video_p25", "asc");
+    expect(result.map((r) => r.name)).toEqual(["Y", "Z", "X"]);
+  });
+
+  it("chave ausente em values é tratada como null (vai pro fim)", () => {
+    const partialRows: SortableRow[] = [
+      { name: "X", values: { video_p25: 40 } },
+      { name: "Y", values: {} },
+    ];
+    const result = sortOverviewRows(partialRows, "video_p25", "desc");
+    expect(result.map((r) => r.name)).toEqual(["X", "Y"]);
   });
 });
