@@ -82,7 +82,8 @@ export function computeObjectiveRollups(
   for (const row of insightRows) {
     const actionKey = actionKeyByAdSetId.get(row.adSetId);
     if (!actionKey) continue;
-    const actionTypes = actionTypesByKey[actionKey] ?? [];
+    const actionTypes = actionTypesByKey[actionKey];
+    if (!actionTypes) continue;
     const current = byActionKey[actionKey] ?? { spend: 0, count: 0, value: 0 };
     byActionKey[actionKey] = {
       spend: current.spend + row.spend,

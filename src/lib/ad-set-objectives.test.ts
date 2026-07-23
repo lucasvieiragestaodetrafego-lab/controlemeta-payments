@@ -98,4 +98,23 @@ describe("computeObjectiveRollups", () => {
     const rollup = computeObjectiveRollups(adSets, rows, ACTION_TYPES_BY_KEY);
     expect(rollup.distinctActionKeys).toEqual(["leads"]);
   });
+
+  it("actionKey ausente de actionTypesByKey não soma nada (não vaza pra outros objetivos)", () => {
+    const adSets: AdSetObjective[] = [{ adSetId: "1", actionKey: "leads" }];
+    const rows: AdSetInsightRow[] = [
+      {
+        adSetId: "1",
+        spend: 100,
+        actions: [
+          { action_type: "lead", value: "5" },
+          { action_type: "purchase", value: "999" },
+        ],
+        actionValues: [],
+      },
+    ];
+    // actionTypesByKey propositalmente sem a chave "leads"
+    const rollup = computeObjectiveRollups(adSets, rows, {});
+    expect(rollup.byActionKey.leads).toBeUndefined();
+    expect(rollup.distinctActionKeys).toEqual([]);
+  });
 });
