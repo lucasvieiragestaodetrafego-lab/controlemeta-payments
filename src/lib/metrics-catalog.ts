@@ -39,6 +39,24 @@ export interface MetricDefinition {
   source: MetricSource;
 }
 
+const RESULTADOS_INVESTIMENTO: MetricDefinition[] = [
+  { key: "gasto", label: "Gasto", category: "Resultados e investimento", valueKind: "currency", source: { kind: "scalar", field: "spend" } },
+  {
+    key: "resultado",
+    label: "Resultado",
+    category: "Resultados e investimento",
+    valueKind: "count",
+    source: { kind: "pseudo" },
+  },
+  {
+    key: "custo_por_resultado",
+    label: "Custo por resultado",
+    category: "Resultados e investimento",
+    valueKind: "currency",
+    source: { kind: "pseudo" },
+  },
+];
+
 const DISTRIBUICAO: MetricDefinition[] = [
   { key: "alcance", label: "Alcance", category: "Distribuição", valueKind: "count", source: { kind: "scalar", field: "reach" } },
   { key: "impressoes", label: "Impressões", category: "Distribuição", valueKind: "count", source: { kind: "scalar", field: "impressions" } },
@@ -61,7 +79,7 @@ const DISTRIBUICAO: MetricDefinition[] = [
     label: "CPC (custo por clique no link)",
     category: "Distribuição",
     valueKind: "currency",
-    source: { kind: "cost_per", countField: "inline_link_clicks" },
+    source: { kind: "cost_per", countField: "inline_link_clicks", objectiveKey: "cliques_link" },
   },
 ];
 
@@ -101,7 +119,13 @@ const MENSAGENS: MetricDefinition[] = [
 /** Uma métrica de contagem + custo + valor para cada tipo de conversão já rastreado pelos Relatórios (fonte única: report-variables.ts). */
 const CONVERSOES: MetricDefinition[] = TRACKED_ACTIONS.flatMap((a) => [
   { key: a.key, label: a.label, category: "Conversões", valueKind: "count" as const, source: { kind: "action_sum" as const, field: "actions", actionTypes: a.actionTypes } },
-  { key: a.costKey, label: `Custo por ${a.label.toLowerCase()}`, category: "Conversões", valueKind: "currency" as const, source: { kind: "cost_per" as const, countField: "actions", countActionTypes: a.actionTypes } },
+  {
+    key: a.costKey,
+    label: `Custo por ${a.label.toLowerCase()}`,
+    category: "Conversões",
+    valueKind: "currency" as const,
+    source: { kind: "cost_per" as const, countField: "actions", countActionTypes: a.actionTypes, objectiveKey: a.key },
+  },
   { key: a.valueKey, label: `Valor de ${a.label.toLowerCase()}`, category: "Conversões", valueKind: "currency" as const, source: { kind: "action_sum" as const, field: "action_values", actionTypes: a.actionTypes } },
 ]);
 
@@ -113,6 +137,7 @@ const ROAS_TICKET: MetricDefinition[] = [
 ];
 
 export const METRIC_CATALOG: MetricDefinition[] = [
+  ...RESULTADOS_INVESTIMENTO,
   ...DISTRIBUICAO,
   ...VIDEO,
   ...ENGAJAMENTO,
